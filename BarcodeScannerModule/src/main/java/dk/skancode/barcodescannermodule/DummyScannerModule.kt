@@ -2,34 +2,62 @@ package dk.skancode.barcodescannermodule
 
 class DummyScannerModule: IScannerModule {
     override fun getScannerState(): String {
-        TODO("Not yet implemented")
+        throw RuntimeException("Scanner is not available")
     }
 
     override fun setScannerState(enabler: Enabler) {
-        TODO("Not yet implemented")
+        throw RuntimeException("Scanner is not available")
     }
 
-    override fun registerReceiver() {
-        TODO("Not yet implemented")
+    override fun registerBarcodeReceiver(eventHandler: IEventHandler) {
+        throw RuntimeException("Scanner is not available")
     }
 
-    override fun unregisterReceiver() {
-        TODO("Not yet implemented")
+    override fun unregisterBarcodeReceiver(eventHandler: IEventHandler) {
+        throw RuntimeException("Scanner is not available")
+    }
+
+    override fun pauseReceivers() {
+        throw RuntimeException("Scanner is not available")
+    }
+
+    override fun resumeReceivers() {
+        throw RuntimeException("Scanner is not available")
     }
 
     override fun setAutoEnter(value: Enabler) {
-        TODO("Not yet implemented")
+        throw RuntimeException("Scanner is not available")
     }
 
     override fun setNotificationSound(value: Enabler) {
-        TODO("Not yet implemented")
+        throw RuntimeException("Scanner is not available")
     }
 
     override fun setNotificationVibration(value: Enabler) {
-        TODO("Not yet implemented")
+        throw RuntimeException("Scanner is not available")
     }
 
     override fun setScanMode(value: ScanMode) {
-        TODO("Not yet implemented")
+        throw RuntimeException("Scanner is not available")
+    }
+
+    override fun nfcAvailable(): Boolean {
+        return false
+    }
+
+    override fun setNfcStatus(status: Enabler) {
+        throw RuntimeException("Scanner is not available")
+    }
+
+    override fun registerNFCReceiver(eventHandler: IEventHandler) {
+        throw RuntimeException("Scanner is not available")
+    }
+
+    override fun canSetSymbology(): Boolean {
+        return false
+    }
+
+    override fun setSymbology(symbology: Symbology) {
+        throw RuntimeException("Scanner is not available")
     }
 }

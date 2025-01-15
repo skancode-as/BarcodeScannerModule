@@ -14,6 +14,7 @@ class BarcodeDataReceiver(private val handler: IEventHandler) : BroadcastReceive
     private var dataType: Int? = null
 
     override fun onReceive(context: Context?, intent: Intent?) {
+        println(intent)
         if (intent?.action == DATA_INTENT) {
             val bundle = intent.extras
             if (bundle != null) {

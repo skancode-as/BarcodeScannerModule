@@ -1,18 +1,21 @@
 package dk.skancode.barcodescannermodule.unitechimpl
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import dk.skancode.barcodescannermodule.Enabler
 import dk.skancode.barcodescannermodule.IEventHandler
 import dk.skancode.barcodescannermodule.IScannerModule
 import dk.skancode.barcodescannermodule.ScanMode
+import dk.skancode.barcodescannermodule.Symbology
+import dk.skancode.barcodescannermodule.unitechimpl.BarcodeDataReceiver
 
-class UnitechScannerModule(private val context: Context, private val module: IEventHandler): IScannerModule {
-    private val dataReceiver = BarcodeDataReceiver(module)
+class UnitechScannerModule(private val context: Context, private val activity: Activity):
+    IScannerModule {
+    private var dataReceiver: BarcodeDataReceiver? = null
     private fun getPreferences(): SharedPreferences {
         return context.getSharedPreferences(context.packageName + ".barcode", Context.MODE_PRIVATE)
     }
@@ -30,12 +33,11 @@ class UnitechScannerModule(private val context: Context, private val module: IEv
             Intent("unitech.scanservice.close").putExtra("close", true)
 
         context.sendBroadcast(intent)
-        module.onDataReceived("onScannerStateChange", bundleOf(
-            "state" to enabler.value,
-        ))
     }
 
-    override fun registerReceiver() {
+    override fun registerBarcodeReceiver(eventHandler: IEventHandler) {
+        dataReceiver = BarcodeDataReceiver(eventHandler)
+        println("UNITECH: registerReceiver")
         val filter = IntentFilter("unitech.scanservice.datatype")
         filter.addAction("unitech.scanservice.data")
         val flag = ContextCompat.RECEIVER_EXPORTED
@@ -43,8 +45,17 @@ class UnitechScannerModule(private val context: Context, private val module: IEv
         ContextCompat.registerReceiver(context, dataReceiver, filter, flag)
     }
 
-    override fun unregisterReceiver() {
+    override fun unregisterBarcodeReceiver(eventHandler: IEventHandler) {
+        println("UNITECH: unregisterReceiver")
         context.unregisterReceiver(dataReceiver)
+    }
+
+    override fun pauseReceivers() {
+        throw RuntimeException("Not yet implemented")
+    }
+
+    override fun resumeReceivers() {
+        throw RuntimeException("Not yet implemented")
     }
 
     override fun setAutoEnter(value: Enabler) {
@@ -56,16 +67,18 @@ class UnitechScannerModule(private val context: Context, private val module: IEv
     override fun setNotificationSound(value: Enabler) {
         val intent = Intent("unitech.scanservice.sound")
         intent.putExtra("sound", value == Enabler.ON)
-        context.sendBroadcast(intent);
+        context.sendBroadcast(intent)
     }
 
     override fun setNotificationVibration(value: Enabler) {
+        println("UNITECH: setNotificationVibration to '${value.value}'")
         val intent = Intent("unitech.scanservice.vibration")
         intent.putExtra("vibration", value == Enabler.ON)
-        context.sendBroadcast(intent);
+        context.sendBroadcast(intent)
     }
 
     override fun setScanMode(value: ScanMode) {
+        println("UNITECH: setScanMode to '${value.value}'")
         when (value.value) {
             "api" -> {
                 val intent = Intent("unitech.scanservice.scan2key_setting")
@@ -91,6 +104,26 @@ class UnitechScannerModule(private val context: Context, private val module: IEv
                 context.sendBroadcast(intent)
             }
         }
+    }
+
+    override fun nfcAvailable(): Boolean {
+        return false
+    }
+
+    override fun setNfcStatus(status: Enabler) {
+        throw RuntimeException("NFC not available on UNITECH systems.")
+    }
+
+    override fun registerNFCReceiver(eventHandler: IEventHandler) {
+        throw RuntimeException("Not yet implemented")
+    }
+
+    override fun canSetSymbology(): Boolean {
+        return false
+    }
+
+    override fun setSymbology(symbology: Symbology) {
+        throw RuntimeException("Symbologies not supported. Cannot set symbology on UNITECH systems.")
     }
 
 }
