@@ -1,0 +1,23 @@
+package dk.skancode.barcodescannermodule.compose
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.ComposeView
+import dk.skancode.barcodescannermodule.IScannerModule
+import dk.skancode.barcodescannermodule.ScannerActivity
+
+
+/**
+ * Wraps the content provided in [content] parameter, with a [CompositionLocalProvider] of [IScannerModule],
+ * so the scannerModule is available through [LocalScannerModule].
+ *
+ * Then calls [ScannerActivity.setContentView] with a [ComposeView] with the [LocalScannerModule] wrapped content
+ *
+ * @param content Your app content that depends on LocalScannerModule
+ */
+@Composable
+fun ScannerModuleProvider(scannerModule: IScannerModule, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalScannerModule provides scannerModule) {
+        content()
+    }
+}
