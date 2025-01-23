@@ -6,8 +6,8 @@ import android.content.Intent
 import androidx.core.os.bundleOf
 import dk.skancode.barcodescannermodule.IEventHandler
 
-private const val DATA_INTENT = "unitech.scanservice.data"
-private const val DATA_TYPE_INTENT = "unitech.scanservice.datatype"
+internal const val DATA_INTENT = "unitech.scanservice.data"
+internal const val DATA_TYPE_INTENT = "unitech.scanservice.datatype"
 
 class BarcodeDataReceiver(private val handler: IEventHandler) : BroadcastReceiver() {
     private var data: String? = null
