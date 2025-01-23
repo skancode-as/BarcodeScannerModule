@@ -11,11 +11,10 @@ import dk.skancode.barcodescannermodule.IEventHandler
 import dk.skancode.barcodescannermodule.IScannerModule
 import dk.skancode.barcodescannermodule.ScanMode
 import dk.skancode.barcodescannermodule.Symbology
-import dk.skancode.barcodescannermodule.unitechimpl.BarcodeDataReceiver
 
 class UnitechScannerModule(private val context: Context, private val activity: Activity):
     IScannerModule {
-    private var dataReceiver: BarcodeDataReceiver? = null
+    private val dataReceivers: MutableMap<IEventHandler, BarcodeDataReceiver> = HashMap()
     private fun getPreferences(): SharedPreferences {
         return context.getSharedPreferences(context.packageName + ".barcode", Context.MODE_PRIVATE)
     }
@@ -36,26 +35,38 @@ class UnitechScannerModule(private val context: Context, private val activity: A
     }
 
     override fun registerBarcodeReceiver(eventHandler: IEventHandler) {
-        dataReceiver = BarcodeDataReceiver(eventHandler)
-        println("UNITECH: registerReceiver")
-        val filter = IntentFilter("unitech.scanservice.datatype")
-        filter.addAction("unitech.scanservice.data")
+        val dataReceiver = BarcodeDataReceiver(eventHandler)
+        dataReceivers[eventHandler] = dataReceiver
+        val filter = IntentFilter(DATA_TYPE_INTENT).apply {
+            addAction(DATA_INTENT)
+        }
         val flag = ContextCompat.RECEIVER_EXPORTED
 
         ContextCompat.registerReceiver(context, dataReceiver, filter, flag)
     }
 
     override fun unregisterBarcodeReceiver(eventHandler: IEventHandler) {
-        println("UNITECH: unregisterReceiver")
-        context.unregisterReceiver(dataReceiver)
+        val dataReceiver = dataReceivers.remove(eventHandler)
+        if (dataReceiver != null) {
+            context.unregisterReceiver(dataReceiver)
+        }
     }
 
     override fun pauseReceivers() {
-        throw RuntimeException("Not yet implemented")
+        dataReceivers.forEach { (_, receiver) ->
+            context.unregisterReceiver(receiver)
+        }
     }
 
     override fun resumeReceivers() {
-        throw RuntimeException("Not yet implemented")
+        val filter = IntentFilter(DATA_TYPE_INTENT).apply {
+            addAction(DATA_INTENT)
+        }
+        val flag = ContextCompat.RECEIVER_EXPORTED
+
+        dataReceivers.forEach { (_, dataReceiver) ->
+            ContextCompat.registerReceiver(context, dataReceiver, filter, flag)
+        }
     }
 
     override fun setAutoEnter(value: Enabler) {
@@ -65,20 +76,26 @@ class UnitechScannerModule(private val context: Context, private val activity: A
     }
 
     override fun setNotificationSound(value: Enabler) {
-        val intent = Intent("unitech.scanservice.sound")
-        intent.putExtra("sound", value == Enabler.ON)
-        context.sendBroadcast(intent)
+        context.sendBroadcast(
+            Intent("unitech.scanservice.sound").apply {
+                putExtra("sound", value == Enabler.ON)
+            }
+        )
+
+        context.sendBroadcast(
+            Intent("unitech.scanservice.frequency").apply {
+                putExtra("frequency", "1")
+            }
+        )
     }
 
     override fun setNotificationVibration(value: Enabler) {
-        println("UNITECH: setNotificationVibration to '${value.value}'")
         val intent = Intent("unitech.scanservice.vibration")
         intent.putExtra("vibration", value == Enabler.ON)
         context.sendBroadcast(intent)
     }
 
     override fun setScanMode(value: ScanMode) {
-        println("UNITECH: setScanMode to '${value.value}'")
         when (value.value) {
             "api" -> {
                 val intent = Intent("unitech.scanservice.scan2key_setting")
@@ -111,11 +128,11 @@ class UnitechScannerModule(private val context: Context, private val activity: A
     }
 
     override fun setNfcStatus(status: Enabler) {
-        throw RuntimeException("NFC not available on UNITECH systems.")
+        throw RuntimeException("NFC not available on UNITECH systems yet.")
     }
 
     override fun registerNFCReceiver(eventHandler: IEventHandler) {
-        throw RuntimeException("Not yet implemented")
+        throw RuntimeException("NFC not available on UNITECH systems yet.")
     }
 
     override fun canSetSymbology(): Boolean {
