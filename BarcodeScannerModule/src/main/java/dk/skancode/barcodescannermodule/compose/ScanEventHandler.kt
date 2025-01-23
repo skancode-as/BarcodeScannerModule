@@ -8,12 +8,13 @@ import dk.skancode.barcodescannermodule.IScannerModule
 import dk.skancode.barcodescannermodule.ScanMode
 import dk.skancode.barcodescannermodule.SupportedNewlandSymbologies
 
-fun IScannerModule.defaultBarcodeConfig() {
+internal fun IScannerModule.defaultBarcodeConfig() {
     this.setScannerState(Enabler.ON)
     this.setScanMode(ScanMode.API)
     this.setNotificationSound(Enabler.ON)
     this.setNotificationVibration(Enabler.ON)
     this.setAutoEnter(Enabler.OFF)
+/*
     if (this.canSetSymbology()) {
         this.setSymbology(
             SupportedNewlandSymbologies.TransmitCheckChar(
@@ -28,6 +29,7 @@ fun IScannerModule.defaultBarcodeConfig() {
             )
         )
     }
+*/
 }
 
 @Composable
