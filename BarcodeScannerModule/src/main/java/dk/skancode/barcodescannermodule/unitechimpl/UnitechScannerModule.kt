@@ -5,8 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.nfc.NfcAdapter
+import android.nfc.NfcManager
+import android.os.Build
+import android.os.Build.VERSION_CODES
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import dk.skancode.barcodescannermodule.Enabler
+import dk.skancode.barcodescannermodule.EventHandler
 import dk.skancode.barcodescannermodule.IEventHandler
 import dk.skancode.barcodescannermodule.IScannerModule
 import dk.skancode.barcodescannermodule.ScanMode
@@ -15,6 +21,13 @@ import dk.skancode.barcodescannermodule.Symbology
 class UnitechScannerModule(private val context: Context, private val activity: Activity):
     IScannerModule {
     private val dataReceivers: MutableMap<IEventHandler, BarcodeDataReceiver> = HashMap()
+
+    private val nfcManager: NfcManager? = if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+        context.getSystemService(NfcManager::class.java)
+    } else {
+        null
+    }
+
     private fun getPreferences(): SharedPreferences {
         return context.getSharedPreferences(context.packageName + ".barcode", Context.MODE_PRIVATE)
     }
@@ -124,15 +137,39 @@ class UnitechScannerModule(private val context: Context, private val activity: A
     }
 
     override fun nfcAvailable(): Boolean {
-        return false
+        return if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+            nfcManager!!.defaultAdapter != null
+        } else {
+            false
+        }
     }
 
     override fun setNfcStatus(status: Enabler) {
-        throw RuntimeException("NFC not available on UNITECH systems yet.")
+        context.sendBroadcast(Intent("unitech.scanservice.nfcenable").apply {
+            putExtra("nfcenable", status == Enabler.ON)
+        })
     }
 
     override fun registerNFCReceiver(eventHandler: IEventHandler) {
-        throw RuntimeException("NFC not available on UNITECH systems yet.")
+        val nfcAdapter = nfcManager!!.defaultAdapter
+
+        nfcAdapter.enableReaderMode(
+            activity,
+            {tag ->
+                eventHandler.onDataReceived(
+                    EventHandler.NFC_RECEIVED, bundleOf(
+                        "tag" to tag
+                    ))
+            },
+            NfcAdapter.FLAG_READER_NFC_A
+                .or(NfcAdapter.FLAG_READER_NFC_B)
+                .or(NfcAdapter.FLAG_READER_NFC_F)
+                .or(NfcAdapter.FLAG_READER_NFC_V)
+                .or(NfcAdapter.FLAG_READER_NFC_BARCODE),
+            bundleOf(
+                NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY to 250
+            ),
+        )
     }
 
     override fun canSetSymbology(): Boolean {

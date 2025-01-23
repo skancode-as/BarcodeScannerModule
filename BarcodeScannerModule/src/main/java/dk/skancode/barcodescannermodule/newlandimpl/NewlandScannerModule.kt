@@ -124,7 +124,6 @@ class NewlandScannerModule(private val context: Context, private val activity: A
         nfcAdapter.enableReaderMode(
             activity,
             {tag ->
-                println(tag)
                 eventHandler.onDataReceived(
                     EventHandler.NFC_RECEIVED, bundleOf(
                     "tag" to tag

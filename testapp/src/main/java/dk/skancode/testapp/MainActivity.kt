@@ -1,5 +1,7 @@
 package dk.skancode.testapp
 
+import android.nfc.Tag
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.border
@@ -61,24 +63,37 @@ class MainActivity : ScannerActivity() {
     }
 }
 
+@Suppress("DEPRECATION")
 @Composable
 fun ScanArea(modifier: Modifier = Modifier, scanModule: IScannerModule = LocalScannerModule.current) {
     var scannedText: String by remember { mutableStateOf("") }
 
     val eventHandler = remember {
         IEventHandler { event, payload ->
+            val scanned: String?
+
             when (event) {
                 EventHandler.BARCODE_RECEIVED -> {
-                    val scanned = payload.getString("barcode1")
-                    if (scanned != null) {
-                        scannedText += "$scanned\n"
-                    }
+                    scanned = payload.getString("barcode1")
                 }
+                EventHandler.NFC_RECEIVED -> {
+                    val tag: Tag? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        payload.getParcelable("tag", Tag::class.java)
+                    } else {
+                        payload.getParcelable("tag")
+                    }
+
+                    scanned = tag?.id?.contentToString()
+                }
+                else -> scanned = null
+            }
+            if (scanned != null) {
+                scannedText += "$scanned\n"
             }
         }
     }
 
-    ScanEventHandler(eventHandler, module = scanModule)
+    ScanEventHandler(eventHandler, registerNFC = true, module = scanModule)
     Column(modifier = modifier.border(1.dp, Color.Black)) {
         Text(
             modifier = Modifier.fillMaxSize(),
