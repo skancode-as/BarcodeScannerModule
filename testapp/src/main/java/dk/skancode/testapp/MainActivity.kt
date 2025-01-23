@@ -3,6 +3,7 @@ package dk.skancode.testapp
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,10 +17,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import dk.skancode.barcodescannermodule.Enabler
+import dk.skancode.barcodescannermodule.EventHandler
+import dk.skancode.barcodescannermodule.IEventHandler
+import dk.skancode.barcodescannermodule.IScannerModule
 import dk.skancode.barcodescannermodule.compose.LocalScannerModule
 import dk.skancode.barcodescannermodule.ScannerActivity
-import dk.skancode.barcodescannermodule.compose.ScannerModuleProvider
+import dk.skancode.barcodescannermodule.compose.ScanEventHandler
+import dk.skancode.barcodescannermodule.compose.setContent
 import dk.skancode.testapp.ui.theme.BarcodeScannerProjectTheme
 
 class MainActivity : ScannerActivity() {
@@ -28,34 +35,56 @@ class MainActivity : ScannerActivity() {
         enableEdgeToEdge()
 
         setContent {
-            ScannerModuleProvider(scannerModule = scannerModule) {
-                BarcodeScannerProjectTheme {
-                    val scanModule = LocalScannerModule.current
-                    var scannerEnabled by remember { mutableStateOf(scanModule.getScannerState() == "on") }
-                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                        Column(
-                            verticalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Greeting(
-                                name = "Android",
-                                modifier = Modifier.padding(innerPadding)
-                            )
+            BarcodeScannerProjectTheme {
+                val scanModule = LocalScannerModule.current
+                var scannerEnabled by remember { mutableStateOf(scanModule.getScannerState() == "on") }
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(innerPadding),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        ScanArea(modifier = Modifier.weight(1f))
 
-                            TextButton(onClick = {
-                                scannerEnabled = !scannerEnabled
-                                scanModule.setScannerState(if(scannerEnabled) Enabler.ON else Enabler.OFF)
-                            }) {
-                                Text("Turn scanner ${
-                                    if(scannerEnabled) "off"
-                                    else "on"
-                                }")
-                            }
+                        TextButton(onClick = {
+                            scannerEnabled = !scannerEnabled
+                            scanModule.setScannerState(if(scannerEnabled) Enabler.ON else Enabler.OFF)
+                        }) {
+                            Text("Turn scanner ${
+                                if(scannerEnabled) "off"
+                                else "on"
+                            }")
                         }
                     }
                 }
+            }
 
+        }
+    }
+}
+
+@Composable
+fun ScanArea(modifier: Modifier = Modifier, scanModule: IScannerModule = LocalScannerModule.current) {
+    var scannedText: String by remember { mutableStateOf("") }
+
+    val eventHandler = remember {
+        IEventHandler { event, payload ->
+            when (event) {
+                EventHandler.BARCODE_RECEIVED -> {
+                    val scanned = payload.getString("barcode1")
+                    if (scanned != null) {
+                        scannedText += "$scanned\n"
+                    }
+                }
             }
         }
+    }
+
+    ScanEventHandler(eventHandler, module = scanModule)
+    Column(modifier = modifier.border(1.dp, Color.Black)) {
+        Text(
+            modifier = Modifier.fillMaxSize(),
+            text = scannedText,
+        )
     }
 }
 
