@@ -6,7 +6,6 @@ import dk.skancode.barcodescannermodule.Enabler
 import dk.skancode.barcodescannermodule.IEventHandler
 import dk.skancode.barcodescannermodule.IScannerModule
 import dk.skancode.barcodescannermodule.ScanMode
-import dk.skancode.barcodescannermodule.SupportedNewlandSymbologies
 
 internal fun IScannerModule.defaultBarcodeConfig() {
     this.setScannerState(Enabler.ON)

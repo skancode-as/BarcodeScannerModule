@@ -1,7 +1,6 @@
 package dk.skancode.testapp
 
 import android.os.Bundle
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -86,12 +85,4 @@ fun ScanArea(modifier: Modifier = Modifier, scanModule: IScannerModule = LocalSc
             text = scannedText,
         )
     }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
 }
