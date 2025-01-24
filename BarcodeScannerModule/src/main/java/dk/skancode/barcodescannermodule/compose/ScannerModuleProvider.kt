@@ -7,13 +7,6 @@ import dk.skancode.barcodescannermodule.IScannerModule
 import dk.skancode.barcodescannermodule.ScannerActivity
 
 
-@Composable
-internal fun ScannerModuleProvider(scannerModule: IScannerModule, content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalScannerModule provides scannerModule) {
-        content()
-    }
-}
-
 /**
  * Wraps the content provided in [content] parameter, with a [CompositionLocalProvider] of [IScannerModule],
  * so the scannerModule is available through [LocalScannerModule].
@@ -22,14 +15,10 @@ internal fun ScannerModuleProvider(scannerModule: IScannerModule, content: @Comp
  *
  * @param content Your app content that depends on LocalScannerModule
  */
-fun ScannerActivity.setContent(content: @Composable () -> Unit) {
-    setContentView(
-        ComposeView(this.baseContext).apply {
-            setContent {
-                ScannerModuleProvider(scannerModule) {
-                    content()
-                }
-            }
-        }
-    )
+@Composable
+fun ScannerActivity.ScannerModuleProvider(content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalScannerModule provides scannerModule) {
+        content()
+    }
 }
+

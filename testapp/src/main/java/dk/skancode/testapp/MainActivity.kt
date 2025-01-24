@@ -3,11 +3,14 @@ package dk.skancode.testapp
 import android.nfc.Tag
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -27,7 +30,7 @@ import dk.skancode.barcodescannermodule.IScannerModule
 import dk.skancode.barcodescannermodule.compose.LocalScannerModule
 import dk.skancode.barcodescannermodule.ScannerActivity
 import dk.skancode.barcodescannermodule.compose.ScanEventHandler
-import dk.skancode.barcodescannermodule.compose.setContent
+import dk.skancode.barcodescannermodule.compose.ScannerModuleProvider
 import dk.skancode.testapp.ui.theme.BarcodeScannerProjectTheme
 
 class MainActivity : ScannerActivity() {
@@ -36,29 +39,36 @@ class MainActivity : ScannerActivity() {
         enableEdgeToEdge()
 
         setContent {
-            BarcodeScannerProjectTheme {
-                val scanModule = LocalScannerModule.current
-                var scannerEnabled by remember { mutableStateOf(scanModule.getScannerState() == "on") }
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(
-                        modifier = Modifier.fillMaxSize().padding(innerPadding),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        ScanArea(modifier = Modifier.weight(1f))
+            ScannerModuleProvider {
+                BarcodeScannerProjectTheme {
+                    val scanModule = LocalScannerModule.current
+                    var scannerEnabled by remember { mutableStateOf(scanModule.getScannerState() == "on") }
 
-                        TextButton(onClick = {
-                            scannerEnabled = !scannerEnabled
-                            scanModule.setScannerState(if(scannerEnabled) Enabler.ON else Enabler.OFF)
-                        }) {
-                            Text("Turn scanner ${
-                                if(scannerEnabled) "off"
-                                else "on"
-                            }")
+                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(innerPadding),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            ScanArea(modifier = Modifier.weight(1f))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                TextButton(onClick = {
+                                    scannerEnabled = !scannerEnabled
+                                    scanModule.setScannerState(if(scannerEnabled) Enabler.ON else Enabler.OFF)
+                                }) {
+                                    Text("Turn scanner ${
+                                        if(scannerEnabled) "off"
+                                        else "on"
+                                    }")
+                                }
+                            }
                         }
                     }
                 }
             }
-
         }
     }
 }
