@@ -1,9 +1,10 @@
 package dk.skancode.barcodescannermodule
 
 import android.os.Bundle
+import android.os.PersistableBundle
 import androidx.activity.ComponentActivity
 
-open class ScannerActivity: ComponentActivity() {
+abstract class ScannerActivity: ComponentActivity() {
     private lateinit var _scannerModule: IScannerModule
     val scannerModule: IScannerModule
         get() = _scannerModule
@@ -11,10 +12,13 @@ open class ScannerActivity: ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        _scannerModule = ScannerModuleFactory.create(this)
-        if (_scannerModule.nfcAvailable()) {
-            _scannerModule.setNfcStatus(Enabler.ON)
-        }
+        setupModule()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
+        super.onCreate(savedInstanceState, persistentState)
+
+        setupModule()
     }
 
     override fun onResume() {
@@ -29,5 +33,11 @@ open class ScannerActivity: ComponentActivity() {
         _scannerModule.pauseReceivers()
     }
 
+    private fun setupModule() {
+        _scannerModule = ScannerModuleFactory.create(this)
+        if (_scannerModule.nfcAvailable()) {
+            _scannerModule.setNfcStatus(Enabler.ON)
+        }
+    }
 }
 
