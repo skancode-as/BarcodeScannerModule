@@ -1,10 +1,12 @@
 package dk.skancode.barcodescannermodule.unitechimpl
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.nfc.NfcAdapter
 import android.nfc.NfcManager
 import android.os.Build
@@ -22,11 +24,18 @@ class UnitechScannerModule(private val context: Context, private val activity: A
     IScannerModule {
     private val dataReceivers: MutableMap<IEventHandler, BarcodeDataReceiver> = HashMap()
 
-    private val nfcManager: NfcManager? = if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
-        context.getSystemService(NfcManager::class.java)
-    } else {
-        null
-    }
+    private val nfcManager: NfcManager? =
+        if (
+            Build.VERSION.SDK_INT >= VERSION_CODES.M &&
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.NFC
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            context.getSystemService(NfcManager::class.java)
+        } else {
+            null
+        }
 
     private fun getPreferences(): SharedPreferences {
         return context.getSharedPreferences(context.packageName + ".barcode", Context.MODE_PRIVATE)
@@ -137,8 +146,8 @@ class UnitechScannerModule(private val context: Context, private val activity: A
     }
 
     override fun nfcAvailable(): Boolean {
-        return if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
-            nfcManager!!.defaultAdapter != null
+        return if (Build.VERSION.SDK_INT >= VERSION_CODES.M && nfcManager != null) {
+            nfcManager.defaultAdapter != null
         } else {
             false
         }
