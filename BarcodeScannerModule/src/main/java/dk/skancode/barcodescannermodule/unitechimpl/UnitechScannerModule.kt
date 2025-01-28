@@ -71,6 +71,7 @@ class UnitechScannerModule(private val context: Context, private val activity: A
         val dataReceiver = dataReceivers.remove(eventHandler)
         if (dataReceiver != null) {
             context.unregisterReceiver(dataReceiver)
+            nfcManager?.defaultAdapter?.disableReaderMode(activity)
         }
     }
 

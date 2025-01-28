@@ -4,12 +4,11 @@ import android.app.Activity
 import android.content.Context
 import dk.skancode.barcodescannermodule.newlandimpl.NewlandScannerModule
 import dk.skancode.barcodescannermodule.unitechimpl.UnitechScannerModule
+import dk.skancode.barcodescannermodule.zebraimpl.ZebraScannerModule
 
 class ScannerModuleFactory {
     companion object {
         fun create(activity: Activity): IScannerModule {
-            val brand = android.os.Build.BRAND
-
             return create(activity, activity)
         }
         fun create(context: Context, activity: Activity): IScannerModule {
@@ -21,6 +20,7 @@ class ScannerModuleFactory {
             return when (brand.lowercase()) {
                 "newland" -> NewlandScannerModule(context, activity)
                 "unitech" -> UnitechScannerModule(context, activity)
+                "zebra" -> ZebraScannerModule(context, activity)
                 else -> DummyScannerModule()
             }
         }
