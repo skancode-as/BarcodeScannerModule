@@ -50,7 +50,7 @@ fun ScanEventHandler(
         }
 
         onDispose {
-            if (module.scannerAvailable() && module.nfcAvailable()) {
+            if (registerBarcode && module.scannerAvailable() || registerNFC && module.nfcAvailable()) {
                 module.unregisterBarcodeReceiver(eventHandler)
             }
         }
