@@ -1,11 +1,11 @@
 package dk.skancode.barcodescannermodule.newlandimpl
 
 import android.app.Activity
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import androidx.core.content.ContextCompat
+import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
 import dk.skancode.barcodescannermodule.BaseScannerModule
 import dk.skancode.barcodescannermodule.Enabler
 import dk.skancode.barcodescannermodule.IEventHandler
@@ -24,12 +24,12 @@ class NewlandScannerModule(context: Context, activity: Activity) :
 
     override fun registerBarcodeReceiver(eventHandler: IEventHandler) {
         val dataReceiver = BarcodeDataReceiver(eventHandler)
-        dataReceivers[eventHandler] = dataReceiver
+        dataReceivers.add(dataReceiver)
 
         registerReceiver(dataReceiver)
     }
 
-    override fun registerReceiver(receiver: BroadcastReceiver) {
+    override fun registerReceiver(receiver: BaseBroadcastReceiver) {
         val filter = IntentFilter("nlscan.action.SCANNER_RESULT")
         val flag = ContextCompat.RECEIVER_EXPORTED
 

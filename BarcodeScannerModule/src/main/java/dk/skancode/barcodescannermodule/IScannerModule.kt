@@ -4,7 +4,7 @@ package dk.skancode.barcodescannermodule
 interface IScannerModule {
     fun scannerAvailable(): Boolean {
         val brand = android.os.Build.BRAND.lowercase()
-        return brand == "newland" || brand == "unitech"
+        return brand == "newland" || brand == "unitech" || brand == "zebra"
     }
 
     fun getScannerState(): String

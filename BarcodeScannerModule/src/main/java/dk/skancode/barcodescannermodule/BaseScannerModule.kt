@@ -2,7 +2,6 @@ package dk.skancode.barcodescannermodule
 
 import android.Manifest
 import android.app.Activity
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -14,7 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 
 abstract class BaseScannerModule(protected val context: Context, protected val activity: Activity): IScannerModule {
-    protected val dataReceivers: MutableMap<IEventHandler, BroadcastReceiver> = HashMap()
+    protected val dataReceivers: MutableSet<BaseBroadcastReceiver> = HashSet()
 
     protected val nfcManager: NfcManager? =
         if (
@@ -45,25 +44,30 @@ abstract class BaseScannerModule(protected val context: Context, protected val a
         }
     }
 
-    protected abstract fun registerReceiver(receiver: BroadcastReceiver)
+    protected abstract fun registerReceiver(receiver: BaseBroadcastReceiver)
 
     override fun unregisterBarcodeReceiver(eventHandler: IEventHandler) {
-        val receiver = dataReceivers.remove(eventHandler)
+        val receiver: BaseBroadcastReceiver? = dataReceivers.find { r -> r.handler == eventHandler }
 
         if (receiver != null) {
+            dataReceivers.remove(receiver)
             context.unregisterReceiver(receiver)
             nfcManager?.defaultAdapter?.disableReaderMode(activity)
         }
     }
 
     override fun resumeReceivers() {
-        dataReceivers.forEach { (_, receiver) ->
-            registerReceiver(receiver)
+        if (dataReceivers.isNotEmpty()) {
+            dataReceivers.forEach { receiver ->
+                registerReceiver(receiver)
+            }
+            registerNFCReceiver(dataReceivers.first().handler)
         }
     }
 
     override fun pauseReceivers() {
-        dataReceivers.forEach { (_, receiver) ->
+        nfcManager?.defaultAdapter?.disableReaderMode(activity)
+        dataReceivers.forEach { receiver ->
             context.unregisterReceiver(receiver)
         }
     }

@@ -27,6 +27,7 @@ import dk.skancode.barcodescannermodule.Enabler
 import dk.skancode.barcodescannermodule.EventHandler
 import dk.skancode.barcodescannermodule.IEventHandler
 import dk.skancode.barcodescannermodule.IScannerModule
+import dk.skancode.barcodescannermodule.ScanMode
 import dk.skancode.barcodescannermodule.compose.LocalScannerModule
 import dk.skancode.barcodescannermodule.ScannerActivity
 import dk.skancode.barcodescannermodule.compose.ScanEventHandler
@@ -38,11 +39,16 @@ class MainActivity : ScannerActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        scannerModule.setNotificationVibration(Enabler.ON)
+        scannerModule.setScannerState(Enabler.ON)
+        scannerModule.setScanMode(ScanMode.API)
+
         setContent {
             ScannerModuleProvider {
                 BarcodeScannerProjectTheme {
                     val scanModule = LocalScannerModule.current
                     var scannerEnabled by remember { mutableStateOf(scanModule.getScannerState() == "on") }
+                    var vibrationEnabled by remember { mutableStateOf(true) }
 
                     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                         Column(
@@ -61,6 +67,15 @@ class MainActivity : ScannerActivity() {
                                 }) {
                                     Text("Turn scanner ${
                                         if(scannerEnabled) "off"
+                                        else "on"
+                                    }")
+                                }
+                                TextButton(onClick = {
+                                    vibrationEnabled = !vibrationEnabled
+                                    scanModule.setNotificationVibration(if(vibrationEnabled) Enabler.ON else Enabler.OFF)
+                                }) {
+                                    Text("Turn vibration ${
+                                        if(vibrationEnabled) "off"
                                         else "on"
                                     }")
                                 }
@@ -103,7 +118,7 @@ fun ScanArea(modifier: Modifier = Modifier, scanModule: IScannerModule = LocalSc
         }
     }
 
-    ScanEventHandler(eventHandler, registerNFC = true, module = scanModule)
+    ScanEventHandler(eventHandler, module = scanModule)
     Column(modifier = modifier.border(1.dp, Color.Black)) {
         Text(
             modifier = Modifier.fillMaxSize(),
