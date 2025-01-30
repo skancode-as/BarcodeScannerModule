@@ -12,9 +12,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +49,7 @@ class MainActivity : ScannerActivity() {
         enableEdgeToEdge()
 
         scannerModule.setNotificationVibration(Enabler.ON)
+        scannerModule.setNotificationSound(Enabler.ON)
         scannerModule.setScannerState(Enabler.ON)
         scannerModule.setScanMode(ScanMode.API)
 
@@ -48,13 +58,23 @@ class MainActivity : ScannerActivity() {
                 BarcodeScannerProjectTheme {
                     val scanModule = LocalScannerModule.current
                     var scannerEnabled by remember { mutableStateOf(scanModule.getScannerState() == "on") }
-                    var vibrationEnabled by remember { mutableStateOf(true) }
+                    var vibrationAndSoundEnabled by remember { mutableStateOf(true) }
 
                     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                         Column(
-                            modifier = Modifier.fillMaxSize().padding(innerPadding),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
+                            SelectScanMode(
+                                modifier = Modifier.fillMaxWidth(),
+                                onSelect = {
+                                    scanModule.setScanMode(it)
+                                },
+                                defaultText = "API",
+                            )
+
                             ScanArea(modifier = Modifier.weight(1f))
 
                             Row(
@@ -63,21 +83,26 @@ class MainActivity : ScannerActivity() {
                             ) {
                                 TextButton(onClick = {
                                     scannerEnabled = !scannerEnabled
-                                    scanModule.setScannerState(if(scannerEnabled) Enabler.ON else Enabler.OFF)
+                                    scanModule.setScannerState(if (scannerEnabled) Enabler.ON else Enabler.OFF)
                                 }) {
-                                    Text("Turn scanner ${
-                                        if(scannerEnabled) "off"
-                                        else "on"
-                                    }")
+                                    Text(
+                                        "Turn scanner ${
+                                            if (scannerEnabled) "off"
+                                            else "on"
+                                        }"
+                                    )
                                 }
                                 TextButton(onClick = {
-                                    vibrationEnabled = !vibrationEnabled
-                                    scanModule.setNotificationVibration(if(vibrationEnabled) Enabler.ON else Enabler.OFF)
+                                    vibrationAndSoundEnabled = !vibrationAndSoundEnabled
+                                    scanModule.setNotificationVibration(if (vibrationAndSoundEnabled) Enabler.ON else Enabler.OFF)
+                                    scanModule.setNotificationSound(if (vibrationAndSoundEnabled) Enabler.ON else Enabler.OFF)
                                 }) {
-                                    Text("Turn vibration ${
-                                        if(vibrationEnabled) "off"
-                                        else "on"
-                                    }")
+                                    Text(
+                                        "Turn vibration and sound ${
+                                            if (vibrationAndSoundEnabled) "off"
+                                            else "on"
+                                        }"
+                                    )
                                 }
                             }
                         }
@@ -90,7 +115,10 @@ class MainActivity : ScannerActivity() {
 
 @Suppress("DEPRECATION")
 @Composable
-fun ScanArea(modifier: Modifier = Modifier, scanModule: IScannerModule = LocalScannerModule.current) {
+fun ScanArea(
+    modifier: Modifier = Modifier,
+    scanModule: IScannerModule = LocalScannerModule.current
+) {
     var scannedText: String by remember { mutableStateOf("") }
 
     val eventHandler = remember {
@@ -101,6 +129,7 @@ fun ScanArea(modifier: Modifier = Modifier, scanModule: IScannerModule = LocalSc
                 EventHandler.BARCODE_RECEIVED -> {
                     scanned = payload.getString("barcode1")
                 }
+
                 EventHandler.NFC_RECEIVED -> {
                     val tag: Tag? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         payload.getParcelable("tag", Tag::class.java)
@@ -110,6 +139,7 @@ fun ScanArea(modifier: Modifier = Modifier, scanModule: IScannerModule = LocalSc
 
                     scanned = tag?.id?.contentToString()
                 }
+
                 else -> scanned = null
             }
             if (scanned != null) {
@@ -124,5 +154,53 @@ fun ScanArea(modifier: Modifier = Modifier, scanModule: IScannerModule = LocalSc
             modifier = Modifier.fillMaxSize(),
             text = scannedText,
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SelectScanMode(
+    modifier: Modifier = Modifier,
+    onSelect: (ScanMode) -> Unit,
+    defaultText: String = "",
+) {
+    var selectedTest by remember { mutableStateOf(defaultText) }
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        modifier = modifier,
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+    ) {
+        TextField(
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
+            value = selectedTest,
+            onValueChange = {},
+            readOnly = true,
+            singleLine = true,
+            label = { Text("Scanner output mode") },
+            trailingIcon = { TrailingIcon(expanded = expanded) },
+            colors = ExposedDropdownMenuDefaults.textFieldColors(),
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("API") },
+                onClick = {
+                    expanded = false
+                    selectedTest = "API"
+                    onSelect(ScanMode.API)
+                },
+            )
+            DropdownMenuItem(
+                text = { Text("Direct") },
+                onClick = {
+                    expanded = false
+                    selectedTest = "Direct"
+                    onSelect(ScanMode.DIRECT)
+                },
+            )
+        }
     }
 }

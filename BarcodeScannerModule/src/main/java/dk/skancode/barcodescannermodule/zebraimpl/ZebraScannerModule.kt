@@ -35,6 +35,7 @@ class ZebraScannerModule(context: Context, activity: Activity): BaseScannerModul
     }
 
     override fun setScannerState(enabler: Enabler) {
+        getPreferences().edit().putString("scannerState", enabler.value).apply()
         val intent = Intent(ACTION).apply {
             putExtra(ENABLE_SCANNER_EXTRA, enabler == Enabler.ON)
         }
@@ -51,9 +52,29 @@ class ZebraScannerModule(context: Context, activity: Activity): BaseScannerModul
     }
 
     override fun setAutoEnter(value: Enabler) {
+        val keystrokeParams = bundleOf(
+            "keystroke_action_char" to "LF",
+        )
+        val keystrokeBundle = bundleOf(
+            "PLUGIN_NAME" to "KEYSTROKE",
+            "RESET_CONFIG" to "false",
+            "PARAM_LIST" to keystrokeParams,
+        )
+        configureProfile(keystrokeBundle)
     }
 
     override fun setNotificationSound(value: Enabler) {
+        val paramBundle = bundleOf(
+            "configure_all_scanners" to "true",
+            "remote_scanner_audio_feedback_mode" to if (value == Enabler.ON) 2 else 0,
+        )
+
+        // decode_haptic_feedback: Boolean
+        configureProfile(bundleOf(
+            "PLUGIN_NAME" to "BARCODE",
+            "RESET_CONFIG" to "false",
+            "PARAM_LIST" to paramBundle,
+        ))
     }
 
     override fun setNotificationVibration(value: Enabler) {
@@ -74,31 +95,72 @@ class ZebraScannerModule(context: Context, activity: Activity): BaseScannerModul
         when(value) {
             ScanMode.API -> {
                 val intentParams = bundleOf(
-                    "intent_output_enabled" to true,
+                    "intent_output_enabled" to "true",
                     "intent_action" to RECEIVER_ACTION,
                     "intent_category" to RECEIVER_CATEGORY,
                     "intent_delivery" to 2,
                 )
                 val intentBundle = bundleOf(
                     "PLUGIN_NAME" to "INTENT",
-                    "RESET_CONFIG" to false,
+                    "RESET_CONFIG" to "false",
                     "PARAM_LIST" to intentParams,
                 )
 
                 val keystrokeParams = bundleOf(
-                    "keystroke_output_enabled" to false,
+                    "keystroke_output_enabled" to "false",
                 )
                 val keystrokeBundle = bundleOf(
                     "PLUGIN_NAME" to "KEYSTROKE",
-                    "RESET_CONFIG" to false,
+                    "RESET_CONFIG" to "false",
                     "PARAM_LIST" to keystrokeParams,
                 )
 
                 configureProfile(arrayListOf(intentBundle, keystrokeBundle))
             }
             ScanMode.PADDING -> {}
-            ScanMode.DIRECT -> TODO()
-            ScanMode.SIMULATE -> TODO()
+            ScanMode.DIRECT -> {
+                val intentParams = bundleOf(
+                    "intent_output_enabled" to "false",
+                )
+                val intentBundle = bundleOf(
+                    "PLUGIN_NAME" to "INTENT",
+                    "RESET_CONFIG" to "true",
+                    "PARAM_LIST" to intentParams,
+                )
+
+                val keystrokeParams = bundleOf(
+                    "keystroke_output_enabled" to "true",
+                    "keystroke_character_delay" to 1,
+                )
+                val keystrokeBundle = bundleOf(
+                    "PLUGIN_NAME" to "KEYSTROKE",
+                    "RESET_CONFIG" to "false",
+                    "PARAM_LIST" to keystrokeParams,
+                )
+                configureProfile(arrayListOf(intentBundle, keystrokeBundle))
+            }
+            ScanMode.SIMULATE -> {
+                val intentParams = bundleOf(
+                    "intent_output_enabled" to "false",
+                )
+                val intentBundle = bundleOf(
+                    "PLUGIN_NAME" to "INTENT",
+                    "RESET_CONFIG" to "true",
+                    "PARAM_LIST" to intentParams,
+                )
+
+                val keystrokeParams = bundleOf(
+                    "keystroke_output_enabled" to "true",
+                    "keystroke_character_delay" to 100,
+                )
+                val keystrokeBundle = bundleOf(
+                    "PLUGIN_NAME" to "KEYSTROKE",
+                    "RESET_CONFIG" to "false",
+                    "PARAM_LIST" to keystrokeParams,
+                )
+
+                configureProfile(arrayListOf(intentBundle, keystrokeBundle))
+            }
         }
     }
 
