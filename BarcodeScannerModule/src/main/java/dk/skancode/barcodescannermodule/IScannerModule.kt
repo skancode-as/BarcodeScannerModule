@@ -4,7 +4,7 @@ package dk.skancode.barcodescannermodule
 interface IScannerModule {
     fun scannerAvailable(): Boolean {
         val brand = android.os.Build.BRAND.lowercase()
-        return brand == "newland" || brand == "unitech"
+        return brand == "newland" || brand == "unitech" || brand == "zebra"
     }
 
     fun getScannerState(): String
@@ -26,7 +26,18 @@ interface IScannerModule {
     /**
      * Always call nfcAvailable before calling any nfc related function, since some implementations will throw a RuntimeException if nfc is not supported
      */
+    fun getNfcStatus(): Enabler
+    /**
+     * Always call nfcAvailable before calling any nfc related function, since some implementations will throw a RuntimeException if nfc is not supported
+     */
+    fun canSetNfcStatus(): Boolean
+    /**
+     * Always call nfcAvailable before calling any nfc related function, since some implementations will throw a RuntimeException if nfc is not supported
+     */
     fun setNfcStatus(status: Enabler)
+    /**
+     * Always call nfcAvailable before calling any nfc related function, since some implementations will throw a RuntimeException if nfc is not supported
+     */
     fun registerNFCReceiver(eventHandler: IEventHandler)
 
     /**

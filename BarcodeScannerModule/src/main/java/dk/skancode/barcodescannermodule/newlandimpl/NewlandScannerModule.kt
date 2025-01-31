@@ -1,51 +1,21 @@
 package dk.skancode.barcodescannermodule.newlandimpl
 
-import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.SharedPreferences
-import android.content.pm.PackageManager
-import android.nfc.NfcAdapter
-import android.nfc.NfcManager
-import android.os.Build
-import android.os.Build.VERSION_CODES
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
+import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
+import dk.skancode.barcodescannermodule.BaseScannerModule
 import dk.skancode.barcodescannermodule.Enabler
-import dk.skancode.barcodescannermodule.EventHandler
 import dk.skancode.barcodescannermodule.IEventHandler
-import dk.skancode.barcodescannermodule.IScannerModule
 import dk.skancode.barcodescannermodule.NewlandSymbology
 import dk.skancode.barcodescannermodule.ScanMode
 import dk.skancode.barcodescannermodule.ScannerConfigKey
 import dk.skancode.barcodescannermodule.Symbology
 
-class NewlandScannerModule(private val context: Context, private val activity: Activity) :
-    IScannerModule {
-    private val dataReceivers: MutableMap<IEventHandler, BarcodeDataReceiver> = HashMap()
-
-    private val nfcManager: NfcManager? =
-        if (
-            Build.VERSION.SDK_INT >= VERSION_CODES.M &&
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.NFC
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            context.getSystemService(NfcManager::class.java)
-        } else {
-            null
-        }
-
-    private fun getPreferences(): SharedPreferences {
-        return context.getSharedPreferences(context.packageName + ".barcode", Context.MODE_PRIVATE)
-    }
-
-    override fun getScannerState(): String {
-        return getPreferences().getString("scannerState", "off") ?: "off"
-    }
+class NewlandScannerModule(context: Context, activity: Activity) :
+    BaseScannerModule(context, activity) {
 
     override fun setScannerState(enabler: Enabler) {
         getPreferences().edit().putString("scannerState", enabler.value).apply()
@@ -54,35 +24,16 @@ class NewlandScannerModule(private val context: Context, private val activity: A
 
     override fun registerBarcodeReceiver(eventHandler: IEventHandler) {
         val dataReceiver = BarcodeDataReceiver(eventHandler)
-        dataReceivers[eventHandler] = dataReceiver
+        dataReceivers.add(dataReceiver)
+
+        registerReceiver(dataReceiver)
+    }
+
+    override fun registerReceiver(receiver: BaseBroadcastReceiver) {
         val filter = IntentFilter("nlscan.action.SCANNER_RESULT")
         val flag = ContextCompat.RECEIVER_EXPORTED
 
-        ContextCompat.registerReceiver(context, dataReceiver, filter, flag)
-    }
-
-    override fun unregisterBarcodeReceiver(eventHandler: IEventHandler) {
-        val receiver = dataReceivers.remove(eventHandler)
-
-        if (receiver != null) {
-            context.unregisterReceiver(receiver)
-            nfcManager?.defaultAdapter?.disableReaderMode(activity)
-        }
-    }
-
-    override fun pauseReceivers() {
-        dataReceivers.forEach { (_, receiver) ->
-            context.unregisterReceiver(receiver)
-        }
-    }
-
-    override fun resumeReceivers() {
-        val filter = IntentFilter("nlscan.action.SCANNER_RESULT")
-        val flag = ContextCompat.RECEIVER_EXPORTED
-
-        dataReceivers.forEach { (_, dataReceiver) ->
-            ContextCompat.registerReceiver(context, dataReceiver, filter, flag)
-        }
+        ContextCompat.registerReceiver(context, receiver, filter, flag)
     }
 
     override fun setAutoEnter(value: Enabler) {
@@ -101,12 +52,8 @@ class NewlandScannerModule(private val context: Context, private val activity: A
         configureScanner(ScannerConfigKey.SCAN_MODE, value.ordinal)
     }
 
-    override fun nfcAvailable(): Boolean {
-        return if (Build.VERSION.SDK_INT >= VERSION_CODES.M && nfcManager != null) {
-            nfcManager.defaultAdapter != null
-        } else {
-            false
-        }
+    override fun canSetNfcStatus(): Boolean {
+        return true
     }
 
     override fun setNfcStatus(status: Enabler) {
@@ -125,29 +72,6 @@ class NewlandScannerModule(private val context: Context, private val activity: A
         intent.putExtra("set", json)
 
         context.sendBroadcast(intent)
-    }
-
-    override fun registerNFCReceiver(eventHandler: IEventHandler) {
-        val nfcAdapter = nfcManager!!.defaultAdapter
-
-        nfcAdapter.enableReaderMode(
-            activity,
-            { tag ->
-                eventHandler.onDataReceived(
-                    EventHandler.NFC_RECEIVED, bundleOf(
-                        "tag" to tag
-                    )
-                )
-            },
-            NfcAdapter.FLAG_READER_NFC_A
-                .or(NfcAdapter.FLAG_READER_NFC_B)
-                .or(NfcAdapter.FLAG_READER_NFC_F)
-                .or(NfcAdapter.FLAG_READER_NFC_V)
-                .or(NfcAdapter.FLAG_READER_NFC_BARCODE),
-            bundleOf(
-                NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY to 250
-            ),
-        )
     }
 
     override fun canSetSymbology(): Boolean {
