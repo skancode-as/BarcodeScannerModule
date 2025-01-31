@@ -18,11 +18,9 @@ class DummyScannerModule: IScannerModule {
     }
 
     override fun pauseReceivers() {
-        throw RuntimeException("Scanner is not available")
     }
 
     override fun resumeReceivers() {
-        throw RuntimeException("Scanner is not available")
     }
 
     override fun setAutoEnter(value: Enabler) {
@@ -45,12 +43,20 @@ class DummyScannerModule: IScannerModule {
         return false
     }
 
+    override fun getNfcStatus(): Enabler {
+        throw RuntimeException("NFC is not available")
+    }
+
+    override fun canSetNfcStatus(): Boolean {
+        return false
+    }
+
     override fun setNfcStatus(status: Enabler) {
-        throw RuntimeException("Scanner is not available")
+        throw RuntimeException("NFC is not available")
     }
 
     override fun registerNFCReceiver(eventHandler: IEventHandler) {
-        throw RuntimeException("Scanner is not available")
+        throw RuntimeException("NFC is not available")
     }
 
     override fun canSetSymbology(): Boolean {
@@ -58,6 +64,6 @@ class DummyScannerModule: IScannerModule {
     }
 
     override fun setSymbology(symbology: Symbology) {
-        throw RuntimeException("Scanner is not available")
+        throw RuntimeException("Symbology is not available")
     }
 }

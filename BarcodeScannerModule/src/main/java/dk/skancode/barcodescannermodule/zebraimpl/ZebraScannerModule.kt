@@ -44,7 +44,6 @@ class ZebraScannerModule(context: Context, activity: Activity): BaseScannerModul
     }
 
     override fun registerBarcodeReceiver(eventHandler: IEventHandler) {
-        Log.d("ZebraScannerModule", "registerBarcodeReceiver called")
         val dataReceiver = ZebraBarcodeDataReceiver(eventHandler)
         dataReceivers.add(dataReceiver)
 
@@ -64,12 +63,12 @@ class ZebraScannerModule(context: Context, activity: Activity): BaseScannerModul
     }
 
     override fun setNotificationSound(value: Enabler) {
+        Log.d("ZebraScannerModule", "SetNotifcationSound currently not functional")
         val paramBundle = bundleOf(
             "configure_all_scanners" to "true",
             "remote_scanner_audio_feedback_mode" to if (value == Enabler.ON) 2 else 0,
         )
 
-        // decode_haptic_feedback: Boolean
         configureProfile(bundleOf(
             "PLUGIN_NAME" to "BARCODE",
             "RESET_CONFIG" to "false",
@@ -78,12 +77,12 @@ class ZebraScannerModule(context: Context, activity: Activity): BaseScannerModul
     }
 
     override fun setNotificationVibration(value: Enabler) {
+        Log.d("ZebraScannerModule", "SetNotifcationVibration currently not functional")
         val paramBundle = bundleOf(
             "configure_all_scanners" to "true",
             "decode_haptic_feedback" to (value == Enabler.ON),
         )
 
-        // decode_haptic_feedback: Boolean
         configureProfile(bundleOf(
             "PLUGIN_NAME" to "BARCODE",
             "RESET_CONFIG" to "false",
@@ -171,7 +170,7 @@ class ZebraScannerModule(context: Context, activity: Activity): BaseScannerModul
     private fun configureProfile(configBundles: ArrayList<Bundle>) {
         val mainBundle = bundleOf(
             "PROFILE_NAME" to "SkanCodeModule",
-            "CONFIG_MODE" to "UPDATE",
+            "CONFIG_MODE" to "CREATE_IF_NOT_EXIST",
             "PLUGIN_CONFIG" to configBundles,
             "APP_LIST" to arrayOf(
                 bundleOf(
@@ -190,7 +189,12 @@ class ZebraScannerModule(context: Context, activity: Activity): BaseScannerModul
         context.sendBroadcast(intent)
     }
 
+    override fun canSetNfcStatus(): Boolean {
+        return false
+    }
+
     override fun setNfcStatus(status: Enabler) {
+        Log.e("ZebraScannerModule", "Cannot set Nfc status on Zebra devices. You should prompt the user to enable it in Settings.")
     }
 
     override fun canSetSymbology(): Boolean {

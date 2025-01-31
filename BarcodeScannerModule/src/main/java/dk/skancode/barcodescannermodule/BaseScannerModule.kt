@@ -9,13 +9,18 @@ import android.nfc.NfcAdapter
 import android.nfc.NfcManager
 import android.os.Build
 import android.os.Build.VERSION_CODES
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 
-abstract class BaseScannerModule(protected val context: Context, protected val activity: Activity): IScannerModule {
+abstract class BaseScannerModule(
+    protected val context: Context,
+    protected val activity: Activity,
+) : IScannerModule {
     protected val dataReceivers: MutableSet<BaseBroadcastReceiver> = HashSet()
+    private var isPaused = false
 
-    protected val nfcManager: NfcManager? =
+    private val nfcManager: NfcManager? =
         if (
             Build.VERSION.SDK_INT >= VERSION_CODES.M &&
             ContextCompat.checkSelfPermission(
@@ -53,16 +58,24 @@ abstract class BaseScannerModule(protected val context: Context, protected val a
     protected abstract fun registerReceiver(receiver: BaseBroadcastReceiver)
 
     override fun unregisterBarcodeReceiver(eventHandler: IEventHandler) {
+        Log.d(
+            "BaseScannerModule",
+            "unregisterBarcodeReceiver: eventHandler: $eventHandler currentReceivers: $dataReceivers"
+        )
         val receiver: BaseBroadcastReceiver? = dataReceivers.find { r -> r.handler == eventHandler }
 
         if (receiver != null) {
             dataReceivers.remove(receiver)
-            context.unregisterReceiver(receiver)
-            nfcManager?.defaultAdapter?.disableReaderMode(activity)
+            if (!isPaused) {
+                context.unregisterReceiver(receiver)
+                nfcManager?.defaultAdapter?.disableReaderMode(activity)
+            }
         }
     }
 
     override fun resumeReceivers() {
+        Log.d("BaseScannerModule", "resumeReceivers: currentReceivers: $dataReceivers")
+        isPaused = false
         if (dataReceivers.isNotEmpty()) {
             dataReceivers.forEach { receiver ->
                 registerReceiver(receiver)
@@ -72,6 +85,8 @@ abstract class BaseScannerModule(protected val context: Context, protected val a
     }
 
     override fun pauseReceivers() {
+        Log.d("BaseScannerModule", "pauseReceivers: currentReceivers: $dataReceivers")
+        isPaused = true
         nfcManager?.defaultAdapter?.disableReaderMode(activity)
         dataReceivers.forEach { receiver ->
             context.unregisterReceiver(receiver)

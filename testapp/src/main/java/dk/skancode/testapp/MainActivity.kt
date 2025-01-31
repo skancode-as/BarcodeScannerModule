@@ -1,8 +1,10 @@
 package dk.skancode.testapp
 
+import android.content.Intent
 import android.nfc.Tag
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.border
@@ -12,13 +14,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -31,7 +36,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import dk.skancode.barcodescannermodule.Enabler
 import dk.skancode.barcodescannermodule.EventHandler
 import dk.skancode.barcodescannermodule.IEventHandler
@@ -148,7 +155,48 @@ fun ScanArea(
         }
     }
 
-    ScanEventHandler(eventHandler, module = scanModule)
+    var showEnableNfcDialog by remember { mutableStateOf(false) }
+    val localContext = LocalContext.current
+
+    if (showEnableNfcDialog) {
+        AlertDialog(
+            properties = DialogProperties(dismissOnBackPress = false),
+            onDismissRequest = {
+                showEnableNfcDialog = false
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        localContext.startActivity(Intent(Settings.ACTION_NFC_SETTINGS))
+                        showEnableNfcDialog = false
+                    }
+                ) {
+                    Text("Gå til indstillinger")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showEnableNfcDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors().copy(containerColor = MaterialTheme.colorScheme.secondary, contentColor = MaterialTheme.colorScheme.onSecondary)
+                ) {
+                    Text("Luk")
+                }
+            },
+            title = { Text("NFC er ikke aktiveret") },
+            text = { Text("Gå til indstillinger og slå NFC til, for at appen skal fungere optimalt")}
+        )
+    }
+
+    ScanEventHandler(
+        eventHandler = eventHandler,
+        registerNFC = true,
+        onNfcNotEnabled = {
+            showEnableNfcDialog = true
+        },
+        module = scanModule,
+    )
     Column(modifier = modifier.border(1.dp, Color.Black)) {
         Text(
             modifier = Modifier.fillMaxSize(),
