@@ -52,6 +52,10 @@ class NewlandScannerModule(context: Context, activity: Activity) :
         configureScanner(ScannerConfigKey.SCAN_MODE, value.ordinal)
     }
 
+    override fun canSetNfcStatus(): Boolean {
+        return true
+    }
+
     override fun setNfcStatus(status: Enabler) {
         val json = "{\n" +
                 "\t\"quick_setting\": [{\n" +

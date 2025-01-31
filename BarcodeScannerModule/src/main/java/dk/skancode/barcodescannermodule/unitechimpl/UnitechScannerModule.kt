@@ -97,6 +97,10 @@ class UnitechScannerModule(context: Context, activity: Activity):
         }
     }
 
+    override fun canSetNfcStatus(): Boolean {
+        return true
+    }
+
     override fun setNfcStatus(status: Enabler) {
         context.sendBroadcast(Intent("unitech.scanservice.nfcenable").apply {
             putExtra("nfcenable", status == Enabler.ON)

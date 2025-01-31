@@ -44,6 +44,12 @@ abstract class BaseScannerModule(protected val context: Context, protected val a
         }
     }
 
+    override fun getNfcStatus(): Enabler {
+        val adapter = nfcManager?.defaultAdapter
+
+        return if (adapter != null && adapter.isEnabled) Enabler.ON else Enabler.OFF
+    }
+
     protected abstract fun registerReceiver(receiver: BaseBroadcastReceiver)
 
     override fun unregisterBarcodeReceiver(eventHandler: IEventHandler) {
