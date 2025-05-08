@@ -2,14 +2,14 @@ package dk.skancode.barcodescannermodule.unitechimpl
 
 import android.content.Context
 import android.content.Intent
-import androidx.core.os.bundleOf
+import dk.skancode.barcodescannermodule.BarcodeBroadcastListener
 import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
-import dk.skancode.barcodescannermodule.IEventHandler
+import dk.skancode.barcodescannermodule.BundleFactory
 
 internal const val DATA_INTENT = "unitech.scanservice.data"
 internal const val DATA_TYPE_INTENT = "unitech.scanservice.datatype"
 
-class UnitechBarcodeDataReceiver(handler: IEventHandler) : BaseBroadcastReceiver(handler) {
+internal class UnitechBarcodeDataReceiver(private val bundleFactory: BundleFactory = BundleFactory(), private val handler: BarcodeBroadcastListener) : BaseBroadcastReceiver(handler) {
     private var data: String? = null
     private var dataType: Int? = null
 
@@ -20,14 +20,14 @@ class UnitechBarcodeDataReceiver(handler: IEventHandler) : BaseBroadcastReceiver
             if (bundle != null) {
                 data = bundle.getString("text")
                 if (data == null) {
-                    handler.onDataReceived("onBarcodeDataReceived", bundleOf(
+                    handler.onReceive(bundleFactory.create(
                         "barcode1" to null,
                         "barcode2" to null,
                         "barcodeType" to null,
                         "ok" to false
                     ))
                 } else if (dataType != null) {
-                    handler.onDataReceived("onBarcodeDataReceived", bundleOf(
+                    handler.onReceive(bundleFactory.create(
                         "barcode1" to data,
                         "barcode2" to null,
                         "barcodeType" to dataType,
@@ -37,7 +37,7 @@ class UnitechBarcodeDataReceiver(handler: IEventHandler) : BaseBroadcastReceiver
                     dataType = null
                 }
             } else {
-                handler.onDataReceived("onBarcodeDataReceived", bundleOf(
+                handler.onReceive(bundleFactory.create(
                     "barcode1" to null,
                     "barcode2" to null,
                     "barcodeType" to null,
@@ -54,14 +54,14 @@ class UnitechBarcodeDataReceiver(handler: IEventHandler) : BaseBroadcastReceiver
                 dataType = bundle.getInt("text", -1)
                 if (dataType == -1) {
                     dataType = null
-                    handler.onDataReceived("onBarcodeDataReceived", bundleOf(
+                    handler.onReceive(bundleFactory.create(
                         "barcode1" to null,
                         "barcode2" to null,
                         "barcodeType" to null,
                         "ok" to false
                     ))
                 } else if (data != null) {
-                    handler.onDataReceived("onBarcodeDataReceived", bundleOf(
+                    handler.onReceive(bundleFactory.create(
                         "barcode1" to data,
                         "barcode2" to null,
                         "barcodeType" to dataType,
@@ -71,7 +71,7 @@ class UnitechBarcodeDataReceiver(handler: IEventHandler) : BaseBroadcastReceiver
                     dataType = null
                 }
             } else {
-                handler.onDataReceived("onBarcodeDataReceived", bundleOf(
+                handler.onReceive(bundleFactory.create(
                     "barcode1" to null,
                     "barcode2" to null,
                     "barcodeType" to null,

@@ -10,13 +10,17 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
 import dk.skancode.barcodescannermodule.BaseScannerModule
+import dk.skancode.barcodescannermodule.BundleFactory
 import dk.skancode.barcodescannermodule.Enabler
-import dk.skancode.barcodescannermodule.IEventHandler
+import dk.skancode.barcodescannermodule.EventHandler
 import dk.skancode.barcodescannermodule.ScanMode
 import dk.skancode.barcodescannermodule.Symbology
 
-
-class ZebraScannerModule(context: Context, activity: Activity): BaseScannerModule(context, activity) {
+internal class ZebraScannerModule(
+    context: Context,
+    activity: Activity,
+    val bundleFactory: BundleFactory = BundleFactory()
+): BaseScannerModule(context, activity) {
     companion object {
         const val RECEIVER_ACTION: String = "dk.skancode.barcode.module.ACTION"
         const val ACTION: String = "com.symbol.datawedge.api.ACTION"
@@ -25,7 +29,16 @@ class ZebraScannerModule(context: Context, activity: Activity): BaseScannerModul
         const val SET_CONFIG_EXTRA: String = "com.symbol.datawedge.api.SET_CONFIG"
     }
 
-    override fun registerReceiver(receiver: BaseBroadcastReceiver) {
+    override fun init() {
+        super.init()
+
+        receiver = ZebraBarcodeDataReceiver(bundleFactory) { payload ->
+            barcodeEventHandlers.forEach { handler -> handler.onDataReceived(EventHandler.BARCODE_RECEIVED , payload) }
+        }
+        startBarcode(receiver)
+    }
+
+    override fun startBarcode(receiver: BaseBroadcastReceiver) {
         val filter = IntentFilter(RECEIVER_ACTION).apply {
             addCategory(RECEIVER_CATEGORY)
         }
@@ -41,13 +54,6 @@ class ZebraScannerModule(context: Context, activity: Activity): BaseScannerModul
         }
 
         context.sendBroadcast(intent)
-    }
-
-    override fun registerBarcodeReceiver(eventHandler: IEventHandler) {
-        val dataReceiver = ZebraBarcodeDataReceiver(eventHandler)
-        dataReceivers.add(dataReceiver)
-
-        registerReceiver(dataReceiver)
     }
 
     override fun setAutoEnter(value: Enabler) {

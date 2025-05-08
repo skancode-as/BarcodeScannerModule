@@ -35,6 +35,7 @@ abstract class ScannerActivity: ComponentActivity() {
 
     private fun setupModule() {
         _scannerModule = ScannerModuleFactory.create(this)
+        _scannerModule.init()
         if (_scannerModule.nfcAvailable() && _scannerModule.getNfcStatus() == Enabler.OFF) {
             _scannerModule.setNfcStatus(Enabler.ON)
         }

@@ -5,6 +5,7 @@ import android.nfc.Tag
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.border
@@ -149,6 +150,8 @@ fun ScanArea(
 
                 else -> scanned = null
             }
+
+            Log.d("ScanArea", "Scanned data: $scanned")
             if (scanned != null) {
                 scannedText += "$scanned\n"
             }

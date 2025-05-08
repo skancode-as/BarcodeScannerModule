@@ -1,6 +1,10 @@
 package dk.skancode.barcodescannermodule
 
 class DummyScannerModule: IScannerModule {
+    override fun init() {
+        throw RuntimeException("Scanner is not available")
+    }
+
     override fun getScannerState(): String {
         throw RuntimeException("Scanner is not available")
     }

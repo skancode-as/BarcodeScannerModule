@@ -1,39 +1,50 @@
 package dk.skancode.barcodescannermodule.newlandimpl
 
 import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import androidx.core.content.ContextCompat
 import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
 import dk.skancode.barcodescannermodule.BaseScannerModule
+import dk.skancode.barcodescannermodule.BundleFactory
 import dk.skancode.barcodescannermodule.Enabler
+import dk.skancode.barcodescannermodule.EventHandler
 import dk.skancode.barcodescannermodule.IEventHandler
+import dk.skancode.barcodescannermodule.Logger
 import dk.skancode.barcodescannermodule.NewlandSymbology
 import dk.skancode.barcodescannermodule.ScanMode
 import dk.skancode.barcodescannermodule.ScannerConfigKey
 import dk.skancode.barcodescannermodule.Symbology
 
-class NewlandScannerModule(context: Context, activity: Activity) :
+internal class NewlandScannerModule(
+    context: Context,
+    activity: Activity,
+    val bundleFactory: BundleFactory = BundleFactory(),
+    val logger: Logger = Logger("NewlandScannerModule")
+) :
     BaseScannerModule(context, activity) {
 
-    override fun setScannerState(enabler: Enabler) {
-        getPreferences().edit().putString("scannerState", enabler.value).apply()
-        configureScanner(ScannerConfigKey.SCAN_POWER, enabler.ordinal)
+    override fun init() {
+        super.init()
+
+        receiver = BarcodeDataReceiver(bundleFactory, logger) {  payload ->
+            barcodeEventHandlers.forEach { handler -> handler.onDataReceived(EventHandler.BARCODE_RECEIVED , payload) }
+        }
+        startBarcode(receiver)
     }
 
-    override fun registerBarcodeReceiver(eventHandler: IEventHandler) {
-        val dataReceiver = BarcodeDataReceiver(eventHandler)
-        dataReceivers.add(dataReceiver)
-
-        registerReceiver(dataReceiver)
-    }
-
-    override fun registerReceiver(receiver: BaseBroadcastReceiver) {
+    override fun startBarcode(receiver: BaseBroadcastReceiver) {
         val filter = IntentFilter("nlscan.action.SCANNER_RESULT")
         val flag = ContextCompat.RECEIVER_EXPORTED
 
         ContextCompat.registerReceiver(context, receiver, filter, flag)
+    }
+
+    override fun setScannerState(enabler: Enabler) {
+        getPreferences().edit().putString("scannerState", enabler.value).apply()
+        configureScanner(ScannerConfigKey.SCAN_POWER, enabler.ordinal)
     }
 
     override fun setAutoEnter(value: Enabler) {

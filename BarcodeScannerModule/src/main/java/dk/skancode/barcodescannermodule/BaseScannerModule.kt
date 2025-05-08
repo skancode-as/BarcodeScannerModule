@@ -7,18 +7,29 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.nfc.NfcAdapter
 import android.nfc.NfcManager
+import android.nfc.Tag
 import android.os.Build
 import android.os.Build.VERSION_CODES
 import android.util.Log
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.Companion.PROTECTED
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
+import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
+import dk.skancode.barcodescannermodule.newlandimpl.BarcodeDataReceiver
+import java.util.concurrent.atomic.AtomicBoolean
 
-abstract class BaseScannerModule(
+internal abstract class BaseScannerModule(
     protected val context: Context,
     protected val activity: Activity,
-) : IScannerModule {
+) : IScannerModule, NfcAdapter.ReaderCallback {
+    @Deprecated("Use barcodeEventHandlers and nfcEventHandlers instead")
     protected val dataReceivers: MutableSet<BaseBroadcastReceiver> = HashSet()
-    private var isPaused = false
+    protected val barcodeEventHandlers = mutableSetOf<IEventHandler>()
+    protected val nfcEventHandlers = mutableSetOf<IEventHandler>()
+    private var isPaused = AtomicBoolean(false)
+    @VisibleForTesting(otherwise = PROTECTED)
+    lateinit var receiver: BaseBroadcastReceiver
 
     private val nfcManager: NfcManager? =
         if (
@@ -32,6 +43,20 @@ abstract class BaseScannerModule(
         } else {
             null
         }
+
+    override fun init() {
+        startNFC()
+    }
+
+    override fun onTagDiscovered(tag: Tag?) {
+        nfcEventHandlers.forEach { eventHandler ->
+            eventHandler.onDataReceived(
+                EventHandler.NFC_RECEIVED, bundleOf(
+                    "tag" to tag
+                )
+            )
+        }
+    }
 
     protected fun getPreferences(): SharedPreferences {
         return context.getSharedPreferences(context.packageName + ".barcode", Context.MODE_PRIVATE)
@@ -55,64 +80,51 @@ abstract class BaseScannerModule(
         return if (adapter != null && adapter.isEnabled) Enabler.ON else Enabler.OFF
     }
 
-    protected abstract fun registerReceiver(receiver: BaseBroadcastReceiver)
+    protected abstract fun startBarcode(receiver: BaseBroadcastReceiver)
+
+    override fun registerBarcodeReceiver(eventHandler: IEventHandler) {
+        barcodeEventHandlers.add(eventHandler)
+    }
 
     override fun unregisterBarcodeReceiver(eventHandler: IEventHandler) {
-        Log.d(
-            "BaseScannerModule",
-            "unregisterBarcodeReceiver: eventHandler: $eventHandler currentReceivers: $dataReceivers"
-        )
-        val receiver: BaseBroadcastReceiver? = dataReceivers.find { r -> r.handler == eventHandler }
-
-        if (receiver != null) {
-            dataReceivers.remove(receiver)
-            if (!isPaused) {
-                context.unregisterReceiver(receiver)
-                nfcManager?.defaultAdapter?.disableReaderMode(activity)
-            }
-        }
+        barcodeEventHandlers.remove(eventHandler)
+        nfcEventHandlers.remove(eventHandler)
     }
 
     override fun resumeReceivers() {
-        Log.d("BaseScannerModule", "resumeReceivers: currentReceivers: $dataReceivers")
-        isPaused = false
-        if (dataReceivers.isNotEmpty()) {
-            dataReceivers.forEach { receiver ->
-                registerReceiver(receiver)
-            }
-            registerNFCReceiver(dataReceivers.first().handler)
+        if (isPaused.compareAndSet(true, false)) {
+            startBarcode(receiver)
+            startNFC()
         }
     }
 
     override fun pauseReceivers() {
-        Log.d("BaseScannerModule", "pauseReceivers: currentReceivers: $dataReceivers")
-        isPaused = true
-        nfcManager?.defaultAdapter?.disableReaderMode(activity)
-        dataReceivers.forEach { receiver ->
+        if (isPaused.compareAndSet(false, true)) {
+            nfcManager?.defaultAdapter?.disableReaderMode(activity)
             context.unregisterReceiver(receiver)
         }
     }
 
-    override fun registerNFCReceiver(eventHandler: IEventHandler) {
-        val nfcAdapter = nfcManager!!.defaultAdapter
+    private fun startNFC() {
+        if (nfcManager != null) {
+            val nfcAdapter = nfcManager.defaultAdapter
 
-        nfcAdapter.enableReaderMode(
-            activity,
-            { tag ->
-                eventHandler.onDataReceived(
-                    EventHandler.NFC_RECEIVED, bundleOf(
-                        "tag" to tag
-                    )
-                )
-            },
-            NfcAdapter.FLAG_READER_NFC_A
-                .or(NfcAdapter.FLAG_READER_NFC_B)
-                .or(NfcAdapter.FLAG_READER_NFC_F)
-                .or(NfcAdapter.FLAG_READER_NFC_V)
-                .or(NfcAdapter.FLAG_READER_NFC_BARCODE),
-            bundleOf(
-                NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY to 250
-            ),
-        )
+            nfcAdapter.enableReaderMode(
+                activity,
+                this,
+                NfcAdapter.FLAG_READER_NFC_A
+                    .or(NfcAdapter.FLAG_READER_NFC_B)
+                    .or(NfcAdapter.FLAG_READER_NFC_F)
+                    .or(NfcAdapter.FLAG_READER_NFC_V)
+                    .or(NfcAdapter.FLAG_READER_NFC_BARCODE),
+                bundleOf(
+                    NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY to 250
+                ),
+            )
+        }
+    }
+
+    override fun registerNFCReceiver(eventHandler: IEventHandler) {
+        nfcEventHandlers.add(eventHandler)
     }
 }

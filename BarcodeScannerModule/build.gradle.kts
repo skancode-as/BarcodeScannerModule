@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -10,13 +12,20 @@ android {
 
     defaultConfig {
         minSdk = 21
-        version = "1.0.2"
+        version = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
+        libraryVariants.all {
+            val variant = this
+            outputs.all {
+                val output = this as BaseVariantOutputImpl
+                output.outputFileName = "BarcodeScannerModule-${version}-${variant.buildType.name}.apk"
+            }
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -30,11 +39,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     buildToolsVersion = "34.0.0"
     ndkVersion = "23.1.7779620"
@@ -43,6 +52,9 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.2"
+    }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
 }
 
@@ -54,6 +66,7 @@ dependencies {
     implementation(libs.androidx.runtime.android)
     implementation(libs.androidx.ui.android)
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.kotlin)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

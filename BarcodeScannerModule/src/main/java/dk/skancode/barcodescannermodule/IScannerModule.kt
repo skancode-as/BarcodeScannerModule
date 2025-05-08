@@ -2,6 +2,12 @@ package dk.skancode.barcodescannermodule
 
 
 interface IScannerModule {
+    fun init()
+    fun registerBarcodeReceiver(eventHandler: IEventHandler)
+    fun unregisterBarcodeReceiver(eventHandler: IEventHandler)
+    fun pauseReceivers()
+    fun resumeReceivers()
+
     fun scannerAvailable(): Boolean {
         val brand = android.os.Build.BRAND.lowercase()
         return brand == "newland" || brand == "unitech" || brand == "zebra"
@@ -9,10 +15,6 @@ interface IScannerModule {
 
     fun getScannerState(): String
     fun setScannerState(enabler: Enabler)
-    fun registerBarcodeReceiver(eventHandler: IEventHandler)
-    fun unregisterBarcodeReceiver(eventHandler: IEventHandler)
-    fun pauseReceivers()
-    fun resumeReceivers()
 
     fun setAutoEnter(value: Enabler)
     fun setNotificationSound(value: Enabler)

@@ -7,14 +7,13 @@ import android.content.IntentFilter
 import androidx.core.content.ContextCompat
 import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
 import dk.skancode.barcodescannermodule.BaseScannerModule
+import dk.skancode.barcodescannermodule.BundleFactory
 import dk.skancode.barcodescannermodule.Enabler
-import dk.skancode.barcodescannermodule.IEventHandler
+import dk.skancode.barcodescannermodule.EventHandler
 import dk.skancode.barcodescannermodule.ScanMode
 import dk.skancode.barcodescannermodule.Symbology
 
-class UnitechScannerModule(context: Context, activity: Activity):
-    BaseScannerModule(context, activity) {
-
+internal class UnitechScannerModule(context: Context, activity: Activity, val bundleFactory: BundleFactory = BundleFactory()): BaseScannerModule(context, activity) {
     override fun setScannerState(enabler: Enabler) {
         getPreferences().edit().putString("scannerState", enabler.value).apply()
 
@@ -26,21 +25,22 @@ class UnitechScannerModule(context: Context, activity: Activity):
         context.sendBroadcast(intent)
     }
 
-    override fun registerReceiver(receiver: BaseBroadcastReceiver) {
+    override fun init() {
+        super.init()
+
+        receiver = UnitechBarcodeDataReceiver(bundleFactory) { payload ->
+            barcodeEventHandlers.forEach { handler -> handler.onDataReceived(EventHandler.BARCODE_RECEIVED , payload) }
+        }
+        startBarcode(receiver)
+    }
+
+    override fun startBarcode(receiver: BaseBroadcastReceiver) {
         val filter = IntentFilter(DATA_TYPE_INTENT).apply {
             addAction(DATA_INTENT)
         }
         val flag = ContextCompat.RECEIVER_EXPORTED
 
         ContextCompat.registerReceiver(context, receiver, filter, flag)
-    }
-
-
-    override fun registerBarcodeReceiver(eventHandler: IEventHandler) {
-        val dataReceiver = UnitechBarcodeDataReceiver(eventHandler)
-        dataReceivers.add(dataReceiver)
-
-        registerReceiver(dataReceiver)
     }
 
     override fun setAutoEnter(value: Enabler) {
