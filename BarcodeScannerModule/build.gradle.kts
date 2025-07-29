@@ -8,11 +8,11 @@ plugins {
 
 android {
     namespace = "dk.skancode.barcodescannermodule"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 21
-        version = "1.2.0"
+        version = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
