@@ -1,5 +1,7 @@
 package dk.skancode.barcodescannermodule
 
+import dk.skancode.barcodescannermodule.gs1.Gs1Config
+
 
 interface IScannerModule {
     fun init()
@@ -20,6 +22,8 @@ interface IScannerModule {
     fun setNotificationSound(value: Enabler)
     fun setNotificationVibration(value: Enabler)
     fun setScanMode(value: ScanMode)
+
+    fun setGs1Config(config: Gs1Config)
 
     /**
      * Always call this function before calling any nfc related function, since some implementations will throw a RuntimeException if nfc is not supported

@@ -10,13 +10,12 @@ import android.nfc.NfcManager
 import android.nfc.Tag
 import android.os.Build
 import android.os.Build.VERSION_CODES
-import android.util.Log
+import android.os.Bundle
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PROTECTED
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
-import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
-import dk.skancode.barcodescannermodule.newlandimpl.BarcodeDataReceiver
+import dk.skancode.barcodescannermodule.gs1.Gs1Config
 import java.util.concurrent.atomic.AtomicBoolean
 
 internal abstract class BaseScannerModule(
@@ -30,6 +29,7 @@ internal abstract class BaseScannerModule(
     private var isPaused = AtomicBoolean(false)
     @VisibleForTesting(otherwise = PROTECTED)
     lateinit var receiver: BaseBroadcastReceiver
+    protected var gs1Config = Gs1Config(enabled = Enabler.OFF)
 
     private val nfcManager: NfcManager? =
         if (
@@ -104,6 +104,12 @@ internal abstract class BaseScannerModule(
             context.unregisterReceiver(receiver)
         }
     }
+
+    override fun setGs1Config(config: Gs1Config) {
+        this.gs1Config = config
+    }
+
+    protected abstract fun handleGs1Barcode(payload: Bundle): Bundle
 
     private fun startNFC() {
         if (nfcManager != null) {
