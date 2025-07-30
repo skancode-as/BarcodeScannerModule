@@ -1,8 +1,6 @@
 package dk.skancode.testapp
 
 import android.content.Intent
-import android.nfc.Tag
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -41,14 +39,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import dk.skancode.barcodescannermodule.Enabler
-import dk.skancode.barcodescannermodule.EventHandler
-import dk.skancode.barcodescannermodule.IEventHandler
 import dk.skancode.barcodescannermodule.IScannerModule
 import dk.skancode.barcodescannermodule.ScanMode
 import dk.skancode.barcodescannermodule.compose.LocalScannerModule
 import dk.skancode.barcodescannermodule.ScannerActivity
-import dk.skancode.barcodescannermodule.compose.ScanEventHandler
 import dk.skancode.barcodescannermodule.compose.ScannerModuleProvider
+import dk.skancode.barcodescannermodule.compose.TypedScanEventHandler
+import dk.skancode.barcodescannermodule.event.TypedEvent
+import dk.skancode.barcodescannermodule.event.TypedEventHandler
 import dk.skancode.testapp.ui.theme.BarcodeScannerProjectTheme
 
 class MainActivity : ScannerActivity() {
@@ -67,6 +65,7 @@ class MainActivity : ScannerActivity() {
                     val scanModule = LocalScannerModule.current
                     var scannerEnabled by remember { mutableStateOf(scanModule.getScannerState() == "on") }
                     var vibrationAndSoundEnabled by remember { mutableStateOf(true) }
+                    var barcodeType: String? by remember { mutableStateOf(null) }
 
                     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                         Column(
@@ -75,15 +74,26 @@ class MainActivity : ScannerActivity() {
                                 .padding(innerPadding),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
-                            SelectScanMode(
+                            Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                onSelect = {
-                                    scanModule.setScanMode(it)
-                                },
-                                defaultText = "API",
-                            )
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                SelectScanMode(
+                                    onSelect = {
+                                        scanModule.setScanMode(it)
+                                    },
+                                    defaultText = "API",
+                                )
 
-                            ScanArea(modifier = Modifier.weight(1f))
+                                Text(
+                                    text = if (barcodeType == null) "Ingen stregkode skannet" else "Type: $barcodeType"
+                                )
+                            }
+
+                            ScanArea(
+                                modifier = Modifier.weight(1f),
+                                setBarcodeType = { barcodeType = it }
+                            )
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -125,30 +135,25 @@ class MainActivity : ScannerActivity() {
 @Composable
 fun ScanArea(
     modifier: Modifier = Modifier,
-    scanModule: IScannerModule = LocalScannerModule.current
+    scanModule: IScannerModule = LocalScannerModule.current,
+    setBarcodeType: (String) -> Unit,
 ) {
     var scannedText: String by remember { mutableStateOf("") }
 
     val eventHandler = remember {
-        IEventHandler { event, payload ->
-            val scanned: String?
-
-            when (event) {
-                EventHandler.BARCODE_RECEIVED -> {
-                    scanned = payload.getString("barcode1")
-                }
-
-                EventHandler.NFC_RECEIVED -> {
-                    val tag: Tag? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        payload.getParcelable("tag", Tag::class.java)
+        TypedEventHandler { event ->
+            val scanned = when (event) {
+                is TypedEvent.BarcodeEvent -> {
+                    if (event.ok) {
+                        setBarcodeType(event.barcodeType.name)
+                        event.barcode1
                     } else {
-                        payload.getParcelable("tag")
+                        null
                     }
-
-                    scanned = tag?.id?.contentToString()
                 }
-
-                else -> scanned = null
+                is TypedEvent.NfcEvent -> {
+                    event.tag?.id?.contentToString()
+                }
             }
 
             Log.d("ScanArea", "Scanned data: $scanned")
@@ -192,7 +197,7 @@ fun ScanArea(
         )
     }
 
-    ScanEventHandler(
+    TypedScanEventHandler(
         eventHandler = eventHandler,
         registerNFC = true,
         onNfcNotEnabled = {
