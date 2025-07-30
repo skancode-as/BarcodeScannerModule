@@ -15,21 +15,28 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PROTECTED
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
+import dk.skancode.barcodescannermodule.event.BarcodeType
+import dk.skancode.barcodescannermodule.event.EventHandler
+import dk.skancode.barcodescannermodule.event.IEventHandler
+import dk.skancode.barcodescannermodule.event.TypedEvent
+import dk.skancode.barcodescannermodule.event.TypedEventHandler
 import dk.skancode.barcodescannermodule.gs1.Gs1Config
 import java.util.concurrent.atomic.AtomicBoolean
 
 internal abstract class BaseScannerModule(
     protected val context: Context,
     protected val activity: Activity,
-) : IScannerModule, NfcAdapter.ReaderCallback {
-    @Deprecated("Use barcodeEventHandlers and nfcEventHandlers instead")
-    protected val dataReceivers: MutableSet<BaseBroadcastReceiver> = HashSet()
+) : IScannerModule, NfcAdapter.ReaderCallback, BarcodeBroadcastListener {
+    @Deprecated("Use Use typedEventHandlers instead")
     protected val barcodeEventHandlers = mutableSetOf<IEventHandler>()
+    @Deprecated("Use typedEventHandlers instead")
     protected val nfcEventHandlers = mutableSetOf<IEventHandler>()
+    protected val typedEventHandlers = mutableSetOf<TypedEventHandler>()
     private var isPaused = AtomicBoolean(false)
+    protected abstract val barcodeTypeMap: Map<Int, BarcodeType>
     @VisibleForTesting(otherwise = PROTECTED)
     lateinit var receiver: BaseBroadcastReceiver
-    protected var gs1Config = Gs1Config(enabled = Enabler.OFF)
+    protected var gs1Config_ = Gs1Config(enabled = Enabler.OFF)
 
     private val nfcManager: NfcManager? =
         if (
@@ -48,13 +55,50 @@ internal abstract class BaseScannerModule(
         startNFC()
     }
 
-    override fun onTagDiscovered(tag: Tag?) {
-        nfcEventHandlers.forEach { eventHandler ->
-            eventHandler.onDataReceived(
-                EventHandler.NFC_RECEIVED, bundleOf(
-                    "tag" to tag
+    override fun onReceive(payload: Bundle) {
+        if (barcodeEventHandlers.isNotEmpty()) {
+            barcodeEventHandlers.forEach { handler ->
+                handler.onDataReceived(
+                    EventHandler.BARCODE_RECEIVED,
+                    payload
                 )
-            )
+            }
+        }
+
+        if (typedEventHandlers.isNotEmpty()) {
+            typedEventHandlers.forEach { handler ->
+                val typeInt = payload.getInt("barcodeType", -1)
+                val barcodeType =
+                    if (typeInt == -1) BarcodeType.UNKNOWN
+                    else barcodeTypeMap[typeInt] ?: BarcodeType.UNKNOWN
+
+                handler.onEvent(
+                    TypedEvent.BarcodeEvent(
+                        barcode1 = payload.getString("barcode1"),
+                        barcode2 = payload.getString("barcode2"),
+                        barcodeType = barcodeType,
+                        ok = payload.getBoolean("ok")
+                    )
+                )
+            }
+        }
+    }
+
+    override fun onTagDiscovered(tag: Tag?) {
+        if (nfcEventHandlers.isNotEmpty()) {
+            nfcEventHandlers.forEach { eventHandler ->
+                eventHandler.onDataReceived(
+                    EventHandler.NFC_RECEIVED, bundleOf(
+                        "tag" to tag
+                    )
+                )
+            }
+        }
+
+        if (typedEventHandlers.isNotEmpty()) {
+            typedEventHandlers.forEach { handler ->
+                handler.onEvent(TypedEvent.NfcEvent(tag = tag))
+            }
         }
     }
 
@@ -82,13 +126,23 @@ internal abstract class BaseScannerModule(
 
     protected abstract fun startBarcode(receiver: BaseBroadcastReceiver)
 
+    @Deprecated("Use registerTypedEventHandler and unregisterTypedEventHandler instead")
     override fun registerBarcodeReceiver(eventHandler: IEventHandler) {
         barcodeEventHandlers.add(eventHandler)
     }
 
+    @Deprecated("Use registerTypedEventHandler and unregisterTypedEventHandler instead")
     override fun unregisterBarcodeReceiver(eventHandler: IEventHandler) {
         barcodeEventHandlers.remove(eventHandler)
         nfcEventHandlers.remove(eventHandler)
+    }
+
+    override fun registerTypedEventHandler(handler: TypedEventHandler) {
+        typedEventHandlers.add(handler)
+    }
+
+    override fun unregisterTypedEventHandler(handler: TypedEventHandler) {
+        typedEventHandlers.remove(handler)
     }
 
     override fun resumeReceivers() {
@@ -106,10 +160,10 @@ internal abstract class BaseScannerModule(
     }
 
     override fun setGs1Config(config: Gs1Config) {
-        this.gs1Config = config
+        this.gs1Config_ = config
     }
 
-    protected abstract fun handleGs1Barcode(payload: Bundle): Bundle
+    //protected abstract fun handleGs1Barcode(payload: Bundle): Bundle
 
     private fun startNFC() {
         if (nfcManager != null) {

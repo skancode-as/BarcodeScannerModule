@@ -1,8 +1,11 @@
 package dk.skancode.barcodescannermodule
 
+import dk.skancode.barcodescannermodule.event.IEventHandler
+import dk.skancode.barcodescannermodule.event.TypedEventHandler
+import dk.skancode.barcodescannermodule.gs1.Gs1Config
+
 class DummyScannerModule: IScannerModule {
     override fun init() {
-        throw RuntimeException("Scanner is not available")
     }
 
     override fun getScannerState(): String {
@@ -13,12 +16,20 @@ class DummyScannerModule: IScannerModule {
         throw RuntimeException("Scanner is not available")
     }
 
+    @Deprecated("Use registerTypedEventHandler and unregisterTypedEventHandler instead")
     override fun registerBarcodeReceiver(eventHandler: IEventHandler) {
         throw RuntimeException("Scanner is not available")
     }
 
+    @Deprecated("Use registerTypedEventHandler and unregisterTypedEventHandler instead")
     override fun unregisterBarcodeReceiver(eventHandler: IEventHandler) {
         throw RuntimeException("Scanner is not available")
+    }
+
+    override fun registerTypedEventHandler(handler: TypedEventHandler) {
+    }
+
+    override fun unregisterTypedEventHandler(handler: TypedEventHandler) {
     }
 
     override fun pauseReceivers() {
@@ -41,6 +52,9 @@ class DummyScannerModule: IScannerModule {
 
     override fun setScanMode(value: ScanMode) {
         throw RuntimeException("Scanner is not available")
+    }
+
+    override fun setGs1Config(config: Gs1Config) {
     }
 
     override fun nfcAvailable(): Boolean {

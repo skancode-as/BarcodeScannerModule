@@ -1,37 +1,35 @@
 package dk.skancode.barcodescannermodule.newlandimpl
 
 import android.app.Activity
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import androidx.core.content.ContextCompat
+import dk.skancode.barcodescannermodule.BarcodeBroadcastListener
 import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
 import dk.skancode.barcodescannermodule.BaseScannerModule
 import dk.skancode.barcodescannermodule.BundleFactory
 import dk.skancode.barcodescannermodule.Enabler
-import dk.skancode.barcodescannermodule.EventHandler
-import dk.skancode.barcodescannermodule.IEventHandler
 import dk.skancode.barcodescannermodule.Logger
 import dk.skancode.barcodescannermodule.NewlandSymbology
 import dk.skancode.barcodescannermodule.ScanMode
 import dk.skancode.barcodescannermodule.ScannerConfigKey
 import dk.skancode.barcodescannermodule.Symbology
+import dk.skancode.barcodescannermodule.event.BarcodeType
 
 internal class NewlandScannerModule(
     context: Context,
     activity: Activity,
     val bundleFactory: BundleFactory = BundleFactory(),
     val logger: Logger = Logger("NewlandScannerModule")
-) :
-    BaseScannerModule(context, activity) {
+) : BaseScannerModule(context, activity), BarcodeBroadcastListener {
+    override val barcodeTypeMap: Map<Int, BarcodeType>
+        get() = newlandBarcodeTypeMap
 
     override fun init() {
         super.init()
 
-        receiver = BarcodeDataReceiver(bundleFactory, logger) {  payload ->
-            barcodeEventHandlers.forEach { handler -> handler.onDataReceived(EventHandler.BARCODE_RECEIVED , payload) }
-        }
+        receiver = BarcodeDataReceiver(bundleFactory, logger, this)
         startBarcode(receiver)
     }
 
@@ -110,3 +108,86 @@ internal class NewlandScannerModule(
         context.sendBroadcast(intent)
     }
 }
+
+internal val newlandBarcodeTypeMap = mapOf(
+    2 to BarcodeType.CODE128,
+    3 to BarcodeType.UCCEAN128,
+    4 to BarcodeType.AIM128,
+    5 to BarcodeType.GS1_128,
+    6 to BarcodeType.ISBT128,
+    7 to BarcodeType.EAN8,
+    8 to BarcodeType.EAN13,
+    9 to BarcodeType.UPCE,
+    10 to BarcodeType.UPCA,
+    11 to BarcodeType.ISBN,
+    12 to BarcodeType.ISSN,
+    13 to BarcodeType.CODE39,
+    14 to BarcodeType.CODE93,
+    15 to BarcodeType.CODE93I,
+    16 to BarcodeType.CODABAR,
+    17 to BarcodeType.ITF,
+    18 to BarcodeType.ITF6,
+    19 to BarcodeType.ITF14,
+    20 to BarcodeType.DPLEITCODE,
+    21 to BarcodeType.DPIDENTCODE,
+    22 to BarcodeType.CHNPOST25,
+    23 to BarcodeType.STANDARD25,
+    23 to BarcodeType.IATA25,
+    24 to BarcodeType.MATRIX25,
+    25 to BarcodeType.INDUSTRIAL25,
+    26 to BarcodeType.COOP25,
+    27 to BarcodeType.CODE11,
+    28 to BarcodeType.MSIPLESSEY,
+    29 to BarcodeType.PLESSEY,
+    30 to BarcodeType.RSS14,
+    31 to BarcodeType.RSSLIMITED,
+    32 to BarcodeType.RSSEXPANDED,
+    33 to BarcodeType.TELEPEN,
+    34 to BarcodeType.CHANNELCODE,
+    35 to BarcodeType.CODE32,
+    36 to BarcodeType.CODEZ,
+    37 to BarcodeType.CODABLOCKF,
+    38 to BarcodeType.CODABLOCKA,
+    39 to BarcodeType.CODE49,
+    40 to BarcodeType.CODE16K,
+    41 to BarcodeType.HIBC128,
+    42 to BarcodeType.HIBC39,
+    43 to BarcodeType.RSSFAMILY,
+    44 to BarcodeType.TRIOPTIC_CODE39,
+    45 to BarcodeType.UPC_E1,
+    256 to BarcodeType.PDF417,
+    257 to BarcodeType.MICROPDF,
+    258 to BarcodeType.QRCODE,
+    259 to BarcodeType.MICROQR,
+    260 to BarcodeType.AZTEC,
+    261 to BarcodeType.DATAMATRIX,
+    262 to BarcodeType.MAXICODE,
+    263 to BarcodeType.CSCODE,
+    264 to BarcodeType.GRIDMATRIX,
+    265 to BarcodeType.EARMARK,
+    266 to BarcodeType.VERICODE,
+    267 to BarcodeType.CCA,
+    268 to BarcodeType.CCB,
+    269 to BarcodeType.CCC,
+    270 to BarcodeType.COMPOSITE,
+    271 to BarcodeType.HIBCAZT,
+    272 to BarcodeType.HIBCDM,
+    273 to BarcodeType.HIBCMICROPDF,
+    274 to BarcodeType.HIBCQR,
+    275 to BarcodeType.DOTCODE,
+    512 to BarcodeType.POSTNET,
+    513 to BarcodeType.ONECODE,
+    514 to BarcodeType.RM4SCC,
+    515 to BarcodeType.PLANET,
+    516 to BarcodeType.KIX,
+    517 to BarcodeType.APCUSTOM,
+    518 to BarcodeType.APREDIRECT,
+    519 to BarcodeType.APREPLYPAID,
+    520 to BarcodeType.APROUTING,
+    768 to BarcodeType.NUMOCRB,
+    769 to BarcodeType.PASSPORT,
+    770 to BarcodeType.TD1,
+    2048 to BarcodeType.PRIVATE,
+    2049 to BarcodeType.ZZCODE,
+    65535 to BarcodeType.UNKNOWN,
+)

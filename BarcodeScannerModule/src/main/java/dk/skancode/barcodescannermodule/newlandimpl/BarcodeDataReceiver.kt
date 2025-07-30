@@ -2,12 +2,9 @@ package dk.skancode.barcodescannermodule.newlandimpl
 
 import android.content.Context
 import android.content.Intent
-import androidx.core.os.bundleOf
 import dk.skancode.barcodescannermodule.BarcodeBroadcastListener
 import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
 import dk.skancode.barcodescannermodule.BundleFactory
-import dk.skancode.barcodescannermodule.EventHandler
-import dk.skancode.barcodescannermodule.IEventHandler
 import dk.skancode.barcodescannermodule.Logger
 
 internal class BarcodeDataReceiver(

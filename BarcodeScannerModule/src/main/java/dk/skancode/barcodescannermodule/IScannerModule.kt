@@ -1,12 +1,18 @@
 package dk.skancode.barcodescannermodule
 
+import dk.skancode.barcodescannermodule.event.IEventHandler
+import dk.skancode.barcodescannermodule.event.TypedEventHandler
 import dk.skancode.barcodescannermodule.gs1.Gs1Config
 
 
 interface IScannerModule {
     fun init()
+    @Deprecated("Use registerTypedEventHandler and unregisterTypedEventHandler instead")
     fun registerBarcodeReceiver(eventHandler: IEventHandler)
+    @Deprecated("Use registerTypedEventHandler and unregisterTypedEventHandler instead")
     fun unregisterBarcodeReceiver(eventHandler: IEventHandler)
+    fun registerTypedEventHandler(handler: TypedEventHandler)
+    fun unregisterTypedEventHandler(handler: TypedEventHandler)
     fun pauseReceivers()
     fun resumeReceivers()
 
@@ -44,6 +50,7 @@ interface IScannerModule {
     /**
      * Always call nfcAvailable before calling any nfc related function, since some implementations will throw a RuntimeException if nfc is not supported
      */
+    @Deprecated("Use registerTypedEventHandler and unregisterTypedEventHandler instead")
     fun registerNFCReceiver(eventHandler: IEventHandler)
 
     /**

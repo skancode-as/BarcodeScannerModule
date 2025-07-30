@@ -5,11 +5,16 @@ import android.content.Intent
 import dk.skancode.barcodescannermodule.BarcodeBroadcastListener
 import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
 import dk.skancode.barcodescannermodule.BundleFactory
+import dk.skancode.barcodescannermodule.Logger
 
 internal const val DATA_INTENT = "unitech.scanservice.data"
 internal const val DATA_TYPE_INTENT = "unitech.scanservice.datatype"
 
-internal class UnitechBarcodeDataReceiver(private val bundleFactory: BundleFactory = BundleFactory(), private val handler: BarcodeBroadcastListener) : BaseBroadcastReceiver(handler) {
+internal class UnitechBarcodeDataReceiver(
+    private val bundleFactory: BundleFactory = BundleFactory(),
+    private val logger: Logger,
+    private val handler: BarcodeBroadcastListener,
+) : BaseBroadcastReceiver(handler) {
     private var data: String? = null
     private var dataType: Int? = null
 
@@ -52,6 +57,7 @@ internal class UnitechBarcodeDataReceiver(private val bundleFactory: BundleFacto
             val bundle = intent.extras
             if (bundle != null) {
                 dataType = bundle.getInt("text", -1)
+                logger.info("UnitechBarcodeDataReceiver: Datatype received = $dataType")
                 if (dataType == -1) {
                     dataType = null
                     handler.onReceive(bundleFactory.create(

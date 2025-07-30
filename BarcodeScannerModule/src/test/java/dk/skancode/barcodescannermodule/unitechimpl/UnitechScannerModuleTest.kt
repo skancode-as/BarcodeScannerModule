@@ -5,8 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import dk.skancode.barcodescannermodule.BundleFactory
-import dk.skancode.barcodescannermodule.EventHandler
-import dk.skancode.barcodescannermodule.IEventHandler
+import dk.skancode.barcodescannermodule.event.EventHandler
+import dk.skancode.barcodescannermodule.event.IEventHandler
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
