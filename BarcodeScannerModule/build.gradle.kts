@@ -6,6 +6,21 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("maven-publish")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("release") {
+            groupId = "dk.skancode"
+            artifactId = "barcodescannermodule"
+            version = "1.3.0-beta.2"
+
+            afterEvaluate {
+                from(components["release"])
+            }
+        }
+    }
 }
 
 android {
@@ -14,10 +29,14 @@ android {
 
     defaultConfig {
         minSdk = 21
-        version = "1.3.0"
+        version = "1.3.0-beta.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+
+        aarMetadata {
+            minCompileSdk = 30
+        }
     }
 
     buildTypes {
@@ -25,7 +44,7 @@ android {
             val variant = this
             outputs.all {
                 val output = this as BaseVariantOutputImpl
-                output.outputFileName = "BarcodeScannerModule-${version}-${variant.buildType.name}.apk"
+                output.outputFileName = "BarcodeScannerModule-${version}-${variant.buildType.name}.aar"
             }
         }
         release {
