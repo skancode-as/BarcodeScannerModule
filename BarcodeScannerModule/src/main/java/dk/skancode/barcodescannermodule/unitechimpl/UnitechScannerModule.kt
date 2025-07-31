@@ -13,13 +13,16 @@ import dk.skancode.barcodescannermodule.Logger
 import dk.skancode.barcodescannermodule.ScanMode
 import dk.skancode.barcodescannermodule.Symbology
 import dk.skancode.barcodescannermodule.event.BarcodeType
+import dk.skancode.barcodescannermodule.gs1.Gs1Parser
+import dk.skancode.barcodescannermodule.gs1.Gs1ParserImpl
 
 internal class UnitechScannerModule(
     context: Context,
     activity: Activity,
     val bundleFactory: BundleFactory = BundleFactory(),
-    val logger: Logger = Logger("UnitechScannerModule")
-): BaseScannerModule(context, activity) {
+    val logger: Logger = Logger("UnitechScannerModule"),
+    gs1Parser: Gs1Parser = Gs1ParserImpl()
+): BaseScannerModule(context, activity, bundleFactory, gs1Parser) {
     override val barcodeTypeMap: Map<Int, BarcodeType>
         get() = unitechBarcodeTypeMap
 

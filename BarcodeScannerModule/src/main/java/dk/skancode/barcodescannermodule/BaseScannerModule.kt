@@ -21,11 +21,15 @@ import dk.skancode.barcodescannermodule.event.IEventHandler
 import dk.skancode.barcodescannermodule.event.TypedEvent
 import dk.skancode.barcodescannermodule.event.TypedEventHandler
 import dk.skancode.barcodescannermodule.gs1.Gs1Config
+import dk.skancode.barcodescannermodule.gs1.Gs1Parser
+import dk.skancode.barcodescannermodule.gs1.emptyGs1Object
 import java.util.concurrent.atomic.AtomicBoolean
 
 internal abstract class BaseScannerModule(
     protected val context: Context,
     protected val activity: Activity,
+    private val bundleFactory: BundleFactory,
+    private val gs1Parser: Gs1Parser,
 ) : IScannerModule, NfcAdapter.ReaderCallback, BarcodeBroadcastListener {
     @Deprecated("Use Use typedEventHandlers instead")
     protected val barcodeEventHandlers = mutableSetOf<IEventHandler>()
@@ -36,7 +40,7 @@ internal abstract class BaseScannerModule(
     protected abstract val barcodeTypeMap: Map<Int, BarcodeType>
     @VisibleForTesting(otherwise = PROTECTED)
     lateinit var receiver: BaseBroadcastReceiver
-    protected var gs1Config_ = Gs1Config(enabled = Enabler.OFF)
+    private var _gs1Config = Gs1Config(enabled = Enabler.OFF)
 
     private val nfcManager: NfcManager? =
         if (
@@ -57,6 +61,17 @@ internal abstract class BaseScannerModule(
 
     override fun onReceive(payload: Bundle) {
         if (barcodeEventHandlers.isNotEmpty()) {
+            if (_gs1Config.enabled == Enabler.ON && payload.getBoolean("ok", false)) {
+                val barcode = payload.getString("barcode1")
+                if (barcode != null) {
+                    val (res, isGs1) = gs1Parser.parse(barcode)
+                    if (!isGs1) {
+                        val b = bundleFactory.fromGs1Object(res)
+                        payload.putBundle("gs1", b)
+                    }
+                }
+            }
+
             barcodeEventHandlers.forEach { handler ->
                 handler.onDataReceived(
                     EventHandler.BARCODE_RECEIVED,
@@ -67,19 +82,46 @@ internal abstract class BaseScannerModule(
 
         if (typedEventHandlers.isNotEmpty()) {
             typedEventHandlers.forEach { handler ->
+                val scanOk = payload.getBoolean("ok", false)
+                val barcode1 = payload.getString("barcode1")
                 val typeInt = payload.getInt("barcodeType", -1)
                 val barcodeType =
                     if (typeInt == -1) BarcodeType.UNKNOWN
                     else barcodeTypeMap[typeInt] ?: BarcodeType.UNKNOWN
 
-                handler.onEvent(
-                    TypedEvent.BarcodeEvent(
-                        barcode1 = payload.getString("barcode1"),
-                        barcode2 = payload.getString("barcode2"),
-                        barcodeType = barcodeType,
-                        ok = payload.getBoolean("ok")
+                if (_gs1Config.enabled == Enabler.ON) {
+                    if (!scanOk || barcode1 == null) {
+                        handler.onEvent(
+                            TypedEvent.Gs1Event(
+                                ok = scanOk,
+                                isGs1 = false,
+                                gs1 = emptyGs1Object(),
+                                barcode = barcode1,
+                                barcodeType = barcodeType,
+                            )
+                        )
+                    } else {
+                        val (res, isGs1) = gs1Parser.parse(barcode1)
+                        handler.onEvent(
+                            TypedEvent.Gs1Event(
+                                ok = true,
+                                isGs1 = isGs1,
+                                gs1 = res,
+                                barcode = barcode1,
+                                barcodeType = barcodeType,
+                            )
+                        )
+                    }
+                } else {
+                    handler.onEvent(
+                        TypedEvent.BarcodeEvent(
+                            barcode1 = barcode1,
+                            barcode2 = payload.getString("barcode2"),
+                            barcodeType = barcodeType,
+                            ok = scanOk,
+                        )
                     )
-                )
+                }
             }
         }
     }
@@ -160,7 +202,7 @@ internal abstract class BaseScannerModule(
     }
 
     override fun setGs1Config(config: Gs1Config) {
-        this.gs1Config_ = config
+        this._gs1Config = config
     }
 
     //protected abstract fun handleGs1Barcode(payload: Bundle): Bundle

@@ -16,13 +16,16 @@ import dk.skancode.barcodescannermodule.ScanMode
 import dk.skancode.barcodescannermodule.ScannerConfigKey
 import dk.skancode.barcodescannermodule.Symbology
 import dk.skancode.barcodescannermodule.event.BarcodeType
+import dk.skancode.barcodescannermodule.gs1.Gs1Parser
+import dk.skancode.barcodescannermodule.gs1.Gs1ParserImpl
 
 internal class NewlandScannerModule(
     context: Context,
     activity: Activity,
     val bundleFactory: BundleFactory = BundleFactory(),
-    val logger: Logger = Logger("NewlandScannerModule")
-) : BaseScannerModule(context, activity), BarcodeBroadcastListener {
+    val logger: Logger = Logger("NewlandScannerModule"),
+    gs1Parser: Gs1Parser = Gs1ParserImpl()
+) : BaseScannerModule(context, activity, bundleFactory, gs1Parser), BarcodeBroadcastListener {
     override val barcodeTypeMap: Map<Int, BarcodeType>
         get() = newlandBarcodeTypeMap
 
