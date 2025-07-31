@@ -154,6 +154,7 @@ fun ScanArea(
                 is TypedEvent.NfcEvent -> {
                     event.tag?.id?.contentToString()
                 }
+                else -> {}
             }
 
             Log.d("ScanArea", "Scanned data: $scanned")
