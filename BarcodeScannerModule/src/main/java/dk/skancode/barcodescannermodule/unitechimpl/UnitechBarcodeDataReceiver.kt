@@ -19,7 +19,7 @@ internal class UnitechBarcodeDataReceiver(
     private var dataType: Int? = null
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        println(intent)
+        logger.info("$intent")
         if (intent?.action == DATA_INTENT) {
             val bundle = intent.extras
             if (bundle != null) {
