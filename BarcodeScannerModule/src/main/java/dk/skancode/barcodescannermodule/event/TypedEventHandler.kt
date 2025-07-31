@@ -1,6 +1,7 @@
 package dk.skancode.barcodescannermodule.event
 
 import android.nfc.Tag
+import dk.skancode.barcodescannermodule.gs1.Gs1Object
 
 fun interface TypedEventHandler {
     fun onEvent(e: TypedEvent)
@@ -8,6 +9,7 @@ fun interface TypedEventHandler {
 
 sealed class TypedEvent {
     data class BarcodeEvent(val barcode1: String?, val barcode2: String?, val barcodeType: BarcodeType, val ok: Boolean): TypedEvent()
+    data class Gs1Event(val ok: Boolean, val isGs1: Boolean, val gs1: Gs1Object, val barcode: String?, val barcodeType: BarcodeType): TypedEvent()
     data class NfcEvent(val tag: Tag?): TypedEvent()
 }
 
