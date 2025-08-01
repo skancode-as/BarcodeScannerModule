@@ -53,6 +53,7 @@ class UnitechScannerModuleTest {
         module.init()
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun registerBarcodeReceiver() {
         mockBundleFactory.stub {
@@ -188,6 +189,7 @@ class UnitechScannerModuleTest {
     }
 
 
+    @Suppress("DEPRECATION")
     @Test
     fun unregisterBarcodeReceiver() {
         mockBundleFactory.stub {

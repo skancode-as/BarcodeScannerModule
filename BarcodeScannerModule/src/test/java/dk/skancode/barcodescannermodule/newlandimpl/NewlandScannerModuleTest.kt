@@ -50,6 +50,7 @@ class NewlandScannerModuleTest {
         module.init()
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun registerBarcodeReceiver() {
         mockBundleFactory.stub { mock ->
@@ -188,6 +189,7 @@ class NewlandScannerModuleTest {
         assertEquals("Expected 1 event was $events events", 1, events)
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun unregisterBarcodeReceiver() {
         mockBundleFactory.stub {

@@ -48,6 +48,7 @@ class ZebraScannerModuleTest {
         module.init()
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun registerBarcodeReceiver() {
         mockBundleFactory.stub {
@@ -183,6 +184,7 @@ class ZebraScannerModuleTest {
         assertEquals("Expected 1 event was $events events", 1, events)
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun unregisterBarcodeReceiver() {
         mockBundleFactory.stub {
