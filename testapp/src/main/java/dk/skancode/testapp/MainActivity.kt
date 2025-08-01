@@ -131,7 +131,6 @@ class MainActivity : ScannerActivity() {
     }
 }
 
-@Suppress("DEPRECATION")
 @Composable
 fun ScanArea(
     modifier: Modifier = Modifier,
@@ -154,7 +153,10 @@ fun ScanArea(
                 is TypedEvent.NfcEvent -> {
                     event.tag?.id?.contentToString()
                 }
-                else -> {}
+                is TypedEvent.Gs1Event -> {
+                    Log.d("ScanArea", "Event was Gs1")
+                    ""
+                }
             }
 
             Log.d("ScanArea", "Scanned data: $scanned")
