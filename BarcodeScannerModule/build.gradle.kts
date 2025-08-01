@@ -14,7 +14,7 @@ publishing {
         create<MavenPublication>("release") {
             groupId = "dk.skancode"
             artifactId = "barcodescannermodule"
-            version = "1.3.0-beta.2"
+            version = "1.3.0-beta.3"
 
             afterEvaluate {
                 from(components["release"])
@@ -29,7 +29,7 @@ android {
 
     defaultConfig {
         minSdk = 21
-        version = "1.3.0-beta.2"
+        version = "1.3.0-beta.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
