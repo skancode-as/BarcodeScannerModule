@@ -2,9 +2,10 @@ package dk.skancode.barcodescannermodule
 
 import android.app.Activity
 import android.content.Context
-import dk.skancode.barcodescannermodule.newlandimpl.NewlandScannerModule
-import dk.skancode.barcodescannermodule.unitechimpl.UnitechScannerModule
-import dk.skancode.barcodescannermodule.zebraimpl.ZebraScannerModule
+import dk.skancode.barcodescannermodule.impl.dummy.DummyScannerModule
+import dk.skancode.barcodescannermodule.impl.newland.NewlandScannerModule
+import dk.skancode.barcodescannermodule.impl.unitech.UnitechScannerModule
+import dk.skancode.barcodescannermodule.impl.zebra.ZebraScannerModule
 
 class ScannerModuleFactory {
     companion object {

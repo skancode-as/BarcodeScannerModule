@@ -1,10 +1,10 @@
-package dk.skancode.barcodescannermodule
+package dk.skancode.barcodescannermodule.util
 
 import android.os.Bundle
 import androidx.core.os.bundleOf
 import dk.skancode.barcodescannermodule.gs1.Gs1Object
 
-class BundleFactory {
+internal class BundleFactory {
     fun create(vararg pairs: Pair<String, Any?>): Bundle = bundleOf(*pairs)
     fun fromMap(data: Map<String, Any?>): Bundle = create(*data.toList().toTypedArray())
     fun fromGs1Object(data: Gs1Object): Bundle {

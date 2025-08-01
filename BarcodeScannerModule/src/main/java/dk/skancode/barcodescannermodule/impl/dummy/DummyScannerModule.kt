@@ -1,5 +1,9 @@
-package dk.skancode.barcodescannermodule
+package dk.skancode.barcodescannermodule.impl.dummy
 
+import dk.skancode.barcodescannermodule.Enabler
+import dk.skancode.barcodescannermodule.IScannerModule
+import dk.skancode.barcodescannermodule.ScanMode
+import dk.skancode.barcodescannermodule.Symbology
 import dk.skancode.barcodescannermodule.event.IEventHandler
 import dk.skancode.barcodescannermodule.event.TypedEventHandler
 import dk.skancode.barcodescannermodule.gs1.Gs1Config
@@ -73,6 +77,7 @@ class DummyScannerModule: IScannerModule {
         throw RuntimeException("NFC is not available")
     }
 
+    @Deprecated("Use registerTypedEventHandler and unregisterTypedEventHandler instead")
     override fun registerNFCReceiver(eventHandler: IEventHandler) {
         throw RuntimeException("NFC is not available")
     }

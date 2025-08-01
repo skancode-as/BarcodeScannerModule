@@ -4,20 +4,19 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import dk.skancode.barcodescannermodule.BundleFactory
+import dk.skancode.barcodescannermodule.util.BundleFactory
 import dk.skancode.barcodescannermodule.Enabler
 import dk.skancode.barcodescannermodule.event.EventHandler
 import dk.skancode.barcodescannermodule.event.IEventHandler
-import dk.skancode.barcodescannermodule.Logger
+import dk.skancode.barcodescannermodule.util.Logger
 import dk.skancode.barcodescannermodule.event.BarcodeType
 import dk.skancode.barcodescannermodule.event.TypedEvent
 import dk.skancode.barcodescannermodule.event.TypedEventHandler
 import dk.skancode.barcodescannermodule.gs1.Gs1AI
 import dk.skancode.barcodescannermodule.gs1.Gs1Config
-import dk.skancode.barcodescannermodule.gs1.Gs1Parser
-import dk.skancode.barcodescannermodule.gs1.Gs1ParserImpl
 import dk.skancode.barcodescannermodule.gs1.emptyGs1Object
 import dk.skancode.barcodescannermodule.gs1.gs1ObjectOf
+import dk.skancode.barcodescannermodule.impl.newland.NewlandScannerModule
 import org.junit.Assert.*
 import org.mockito.kotlin.mock
 import org.junit.Before
@@ -36,7 +35,8 @@ class NewlandScannerModuleTest {
     private val mockActivity = mock<Activity>()
     private val mockBundleFactory = mock<BundleFactory>()
     private val mockLogger = mock<Logger>()
-    private val module = NewlandScannerModule(mockContext, mockActivity, mockBundleFactory, mockLogger)
+    private val module =
+        NewlandScannerModule(mockContext, mockActivity, mockBundleFactory, mockLogger)
     val mockIntent = mock<Intent> {
         // the return values of these stubs are irrelevant since we stub the bundle factory in the tests
         on { getStringExtra("SCAN_BARCODE1") }.thenReturn("")

@@ -1,15 +1,15 @@
-package dk.skancode.barcodescannermodule.unitechimpl
+package dk.skancode.barcodescannermodule.impl.unitech
 
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import androidx.core.content.ContextCompat
-import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
-import dk.skancode.barcodescannermodule.BaseScannerModule
-import dk.skancode.barcodescannermodule.BundleFactory
+import dk.skancode.barcodescannermodule.impl.BaseBroadcastReceiver
+import dk.skancode.barcodescannermodule.impl.BaseScannerModule
+import dk.skancode.barcodescannermodule.util.BundleFactory
 import dk.skancode.barcodescannermodule.Enabler
-import dk.skancode.barcodescannermodule.Logger
+import dk.skancode.barcodescannermodule.util.Logger
 import dk.skancode.barcodescannermodule.ScanMode
 import dk.skancode.barcodescannermodule.Symbology
 import dk.skancode.barcodescannermodule.event.BarcodeType

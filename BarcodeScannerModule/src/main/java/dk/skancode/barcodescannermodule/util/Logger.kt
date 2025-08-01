@@ -1,8 +1,8 @@
-package dk.skancode.barcodescannermodule
+package dk.skancode.barcodescannermodule.util
 
 import android.util.Log
 
-class Logger(val tag: String) {
+internal class Logger(val tag: String) {
     fun info(msg: String, throwable: Throwable? = null) {
         Log.i(tag, msg, throwable)
     }

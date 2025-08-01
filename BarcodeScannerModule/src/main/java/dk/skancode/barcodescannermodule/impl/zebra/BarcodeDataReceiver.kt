@@ -1,11 +1,12 @@
-package dk.skancode.barcodescannermodule.zebraimpl
+package dk.skancode.barcodescannermodule.impl.zebra
 
 import android.content.Context
 import android.content.Intent
-import dk.skancode.barcodescannermodule.BarcodeBroadcastListener
-import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
-import dk.skancode.barcodescannermodule.BundleFactory
-import dk.skancode.barcodescannermodule.Logger
+import dk.skancode.barcodescannermodule.impl.BarcodeBroadcastListener
+import dk.skancode.barcodescannermodule.impl.BaseBroadcastReceiver
+import dk.skancode.barcodescannermodule.util.BundleFactory
+import dk.skancode.barcodescannermodule.util.Logger
+import kotlin.collections.get
 
 internal const val SOURCE_EXTRA: String = "com.symbol.datawedge.source"
 internal const val LABEL_TYPE: String = "com.symbol.datawedge.label_type"

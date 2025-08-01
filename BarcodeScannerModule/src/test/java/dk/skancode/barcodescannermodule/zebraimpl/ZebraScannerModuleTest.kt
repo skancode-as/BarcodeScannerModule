@@ -4,9 +4,9 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import dk.skancode.barcodescannermodule.BundleFactory
+import dk.skancode.barcodescannermodule.util.BundleFactory
 import dk.skancode.barcodescannermodule.Enabler
-import dk.skancode.barcodescannermodule.Logger
+import dk.skancode.barcodescannermodule.util.Logger
 import dk.skancode.barcodescannermodule.event.BarcodeType
 import dk.skancode.barcodescannermodule.event.EventHandler
 import dk.skancode.barcodescannermodule.event.IEventHandler
@@ -16,6 +16,7 @@ import dk.skancode.barcodescannermodule.gs1.Gs1AI
 import dk.skancode.barcodescannermodule.gs1.Gs1Config
 import dk.skancode.barcodescannermodule.gs1.emptyGs1Object
 import dk.skancode.barcodescannermodule.gs1.gs1ObjectOf
+import dk.skancode.barcodescannermodule.impl.zebra.ZebraScannerModule
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -34,7 +35,8 @@ class ZebraScannerModuleTest {
     private val mockActivity = mock<Activity>()
     private val mockBundleFactory = mock<BundleFactory>()
     private val mockLogger = mock<Logger>()
-    private val module = ZebraScannerModule(mockContext, mockActivity, mockBundleFactory, mockLogger)
+    private val module =
+        ZebraScannerModule(mockContext, mockActivity, mockBundleFactory, mockLogger)
     val mockIntent = mock<Intent> {
         doReturn(mock<Bundle> {
             doReturn("scanner").on { getString("com.symbol.datawedge.source") }

@@ -1,11 +1,11 @@
-package dk.skancode.barcodescannermodule.unitechimpl
+package dk.skancode.barcodescannermodule.impl.unitech
 
 import android.content.Context
 import android.content.Intent
-import dk.skancode.barcodescannermodule.BarcodeBroadcastListener
-import dk.skancode.barcodescannermodule.BaseBroadcastReceiver
-import dk.skancode.barcodescannermodule.BundleFactory
-import dk.skancode.barcodescannermodule.Logger
+import dk.skancode.barcodescannermodule.impl.BarcodeBroadcastListener
+import dk.skancode.barcodescannermodule.impl.BaseBroadcastReceiver
+import dk.skancode.barcodescannermodule.util.BundleFactory
+import dk.skancode.barcodescannermodule.util.Logger
 
 internal const val DATA_INTENT = "unitech.scanservice.data"
 internal const val DATA_TYPE_INTENT = "unitech.scanservice.datatype"

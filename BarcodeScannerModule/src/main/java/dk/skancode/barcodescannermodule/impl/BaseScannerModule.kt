@@ -1,7 +1,8 @@
-package dk.skancode.barcodescannermodule
+package dk.skancode.barcodescannermodule.impl
 
 import android.Manifest
 import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -9,12 +10,12 @@ import android.nfc.NfcAdapter
 import android.nfc.NfcManager
 import android.nfc.Tag
 import android.os.Build
-import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.VisibleForTesting.Companion.PROTECTED
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
+import dk.skancode.barcodescannermodule.Enabler
+import dk.skancode.barcodescannermodule.IScannerModule
 import dk.skancode.barcodescannermodule.event.BarcodeType
 import dk.skancode.barcodescannermodule.event.EventHandler
 import dk.skancode.barcodescannermodule.event.IEventHandler
@@ -23,6 +24,7 @@ import dk.skancode.barcodescannermodule.event.TypedEventHandler
 import dk.skancode.barcodescannermodule.gs1.Gs1Config
 import dk.skancode.barcodescannermodule.gs1.Gs1Parser
 import dk.skancode.barcodescannermodule.gs1.emptyGs1Object
+import dk.skancode.barcodescannermodule.util.BundleFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 internal abstract class BaseScannerModule(
@@ -38,13 +40,13 @@ internal abstract class BaseScannerModule(
     protected val typedEventHandlers = mutableSetOf<TypedEventHandler>()
     private var isPaused = AtomicBoolean(false)
     protected abstract val barcodeTypeMap: Map<Int, BarcodeType>
-    @VisibleForTesting(otherwise = PROTECTED)
+    @VisibleForTesting(otherwise = VisibleForTesting.Companion.PROTECTED)
     lateinit var receiver: BaseBroadcastReceiver
     private var _gs1Config = Gs1Config(enabled = Enabler.OFF)
 
     private val nfcManager: NfcManager? =
         if (
-            Build.VERSION.SDK_INT >= VERSION_CODES.M &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
             ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.NFC
@@ -74,7 +76,7 @@ internal abstract class BaseScannerModule(
 
             barcodeEventHandlers.forEach { handler ->
                 handler.onDataReceived(
-                    EventHandler.BARCODE_RECEIVED,
+                    EventHandler.Companion.BARCODE_RECEIVED,
                     payload
                 )
             }
@@ -86,8 +88,8 @@ internal abstract class BaseScannerModule(
                 val barcode1 = payload.getString("barcode1")
                 val typeInt = payload.getInt("barcodeType", -1)
                 val barcodeType =
-                    if (typeInt == -1) BarcodeType.UNKNOWN
-                    else barcodeTypeMap[typeInt] ?: BarcodeType.UNKNOWN
+                    if (typeInt == -1) BarcodeType.Companion.UNKNOWN
+                    else barcodeTypeMap[typeInt] ?: BarcodeType.Companion.UNKNOWN
 
                 if (_gs1Config.enabled == Enabler.ON) {
                     if (!scanOk || barcode1 == null) {
@@ -130,7 +132,7 @@ internal abstract class BaseScannerModule(
         if (nfcEventHandlers.isNotEmpty()) {
             nfcEventHandlers.forEach { eventHandler ->
                 eventHandler.onDataReceived(
-                    EventHandler.NFC_RECEIVED, bundleOf(
+                    EventHandler.Companion.NFC_RECEIVED, bundleOf(
                         "tag" to tag
                     )
                 )
@@ -153,7 +155,7 @@ internal abstract class BaseScannerModule(
     }
 
     override fun nfcAvailable(): Boolean {
-        return if (Build.VERSION.SDK_INT >= VERSION_CODES.M && nfcManager != null) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && nfcManager != null) {
             nfcManager.defaultAdapter != null
         } else {
             false
@@ -230,3 +232,9 @@ internal abstract class BaseScannerModule(
         nfcEventHandlers.add(eventHandler)
     }
 }
+
+internal fun interface BarcodeBroadcastListener {
+    fun onReceive(payload: Bundle)
+}
+
+internal abstract class BaseBroadcastReceiver(listener: BarcodeBroadcastListener): BroadcastReceiver()
