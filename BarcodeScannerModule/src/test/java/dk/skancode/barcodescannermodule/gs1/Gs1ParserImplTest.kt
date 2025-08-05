@@ -7,6 +7,98 @@ class Gs1ParserImplTest {
     private val parser: Gs1Parser = Gs1ParserImpl()
 
     @Test
+    fun parseSingleAINoBrackets() {
+        val barcode = "0101234567890128"
+        val expectedAIs = listOf(
+            Gs1AI("01")
+        )
+        val expectedValues = listOf(
+            "01234567890128"
+        )
+
+        runTest(barcode, true, expectedAIs, expectedValues)
+    }
+
+    @Test
+    fun parseTwoAINoBrackets() {
+        val barcode = "010123456789012817210221"
+        val expectedAIs = listOf(
+            Gs1AI("01"),
+            Gs1AI("17"),
+        )
+        val expectedValues = listOf(
+            "01234567890128",
+            "210221",
+        )
+
+        runTest(barcode, true, expectedAIs, expectedValues)
+    }
+
+    @Test
+    fun parseThreeAINoBrackets() {
+        val barcode = "02012345678901283710" + Ascii.GROUP_SEPARATOR + "10250731"
+        val expectedAIs = listOf(
+            Gs1AI("02"),
+            Gs1AI("37"),
+            Gs1AI("10"),
+        )
+        val expectedValues = listOf(
+            "01234567890128",
+            "10",
+            "250731"
+        )
+
+        runTest(barcode, true, expectedAIs, expectedValues)
+    }
+
+    @Test
+    fun parseComplexVariadicNoBrackets() {
+        var barcode = "02012345678901287007250806" + Ascii.GROUP_SEPARATOR + "3712"
+        var expectedAIs = listOf(
+            Gs1AI("02"),
+            Gs1AI("7007"),
+            Gs1AI("37"),
+        )
+        var expectedValues = listOf(
+            "01234567890128",
+            "250806",
+            "12"
+        )
+        runTest(barcode, true, expectedAIs, expectedValues)
+
+        barcode = "02012345678901287007250806251006" + Ascii.GROUP_SEPARATOR + "3712"
+        expectedAIs = listOf(
+            Gs1AI("02"),
+            Gs1AI("7007"),
+            Gs1AI("37"),
+        )
+        expectedValues = listOf(
+            "01234567890128",
+            "250806251006",
+            "12"
+        )
+        runTest(barcode, true, expectedAIs, expectedValues)
+    }
+
+    @Test
+    fun parseInvalidGs1Simple() {
+        val barcode = "0112345678912343715"
+        val expectedAIs = emptyList<Gs1AI>()
+        val expectedValues = emptyList<String>()
+
+        runTest(barcode, false, expectedAIs, expectedValues)
+    }
+
+    @Test
+    fun parseInvalidGs1NonDigitInAI() {
+        val barcode = "0101234567890128TEC-IT"
+        val expectedAIs = emptyList<Gs1AI>()
+        val expectedValues = emptyList<String>()
+
+        runTest(barcode, false, expectedAIs, expectedValues)
+    }
+
+    @Test
     fun parseSingleAI() {
         val barcode = "(01)01234567890128"
         val expectedAIs = listOf(
@@ -49,15 +141,6 @@ class Gs1ParserImplTest {
         )
 
         runTest(barcode, true, expectedAIs, expectedValues)
-    }
-
-    @Test
-    fun parseMissingParens() {
-        val barcode = "0101234567890128"
-        val expectedAIs = emptyList<Gs1AI>()
-        val expectedValues = emptyList<String>()
-
-        runTest(barcode, false, expectedAIs, expectedValues)
     }
 
     @Test
