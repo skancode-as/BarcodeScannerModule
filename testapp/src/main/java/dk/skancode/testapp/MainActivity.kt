@@ -47,6 +47,7 @@ import dk.skancode.barcodescannermodule.compose.ScannerModuleProvider
 import dk.skancode.barcodescannermodule.compose.TypedScanEventHandler
 import dk.skancode.barcodescannermodule.event.TypedEvent
 import dk.skancode.barcodescannermodule.event.TypedEventHandler
+import dk.skancode.barcodescannermodule.gs1.Gs1Config
 import dk.skancode.testapp.ui.theme.BarcodeScannerProjectTheme
 
 class MainActivity : ScannerActivity() {
@@ -154,8 +155,18 @@ fun ScanArea(
                     event.tag?.id?.contentToString()
                 }
                 is TypedEvent.Gs1Event -> {
-                    Log.d("ScanArea", "Event was Gs1")
-                    ""
+                    if (event.ok) {
+                        setBarcodeType(event.barcodeType.name)
+                        if (event.isGs1) {
+                            val res = ArrayList<String>()
+                            for ((key, value) in event.gs1) {
+                                res.add("${key.ai}: $value")
+                            }
+                            res.joinToString("\n")
+                        } else {
+                            event.barcode
+                        }
+                    } else null
                 }
             }
 
@@ -207,6 +218,14 @@ fun ScanArea(
             showEnableNfcDialog = true
         },
         module = scanModule,
+        barcodeConfig = {
+            setScannerState(Enabler.ON)
+            setScanMode(ScanMode.API)
+            setNotificationSound(Enabler.ON)
+            setNotificationVibration(Enabler.ON)
+            setAutoEnter(Enabler.OFF)
+            setGs1Config(Gs1Config(enabled = Enabler.ON))
+        }
     )
     Column(modifier = modifier.border(1.dp, Color.Black)) {
         Text(
