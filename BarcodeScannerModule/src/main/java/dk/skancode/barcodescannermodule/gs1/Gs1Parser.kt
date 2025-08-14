@@ -283,8 +283,21 @@ private val gs1PrefixTree = PrefixTree(
         "7021" to "n4+x..20", // Funktionel status FUNC STAT
         "7022" to "n4+x..20", // Revision status REV STAT
         "7023" to "n4+x..30", // GIAI for en sammensat enhed GIAI - ASSEMBLY
-//        "703S" to "n4+n3+x..27", // ISO landekode og autorisationsnummer Processor # s
-        "710"  to "n3+x..20", // 711, 712, 713, 714 National Healthcare Reimbursement Number (NHRN) NHRN
+        "7030" to "n4+n3+x..27", // ISO landekode og autorisationsnummer Processor # s
+        "7031" to "n4+n3+x..27", // ISO landekode og autorisationsnummer Processor # s
+        "7032" to "n4+n3+x..27", // ISO landekode og autorisationsnummer Processor # s
+        "7033" to "n4+n3+x..27", // ISO landekode og autorisationsnummer Processor # s
+        "7034" to "n4+n3+x..27", // ISO landekode og autorisationsnummer Processor # s
+        "7035" to "n4+n3+x..27", // ISO landekode og autorisationsnummer Processor # s
+        "7036" to "n4+n3+x..27", // ISO landekode og autorisationsnummer Processor # s
+        "7037" to "n4+n3+x..27", // ISO landekode og autorisationsnummer Processor # s
+        "7038" to "n4+n3+x..27", // ISO landekode og autorisationsnummer Processor # s
+        "7039" to "n4+n3+x..27", // ISO landekode og autorisationsnummer Processor # s
+        "710"  to "n3+x..20", // National Healthcare Reimbursement Number (NHRN) NHRN
+        "711"  to "n3+x..20", // National Healthcare Reimbursement Number (NHRN) NHRN
+        "712"  to "n3+x..20", // National Healthcare Reimbursement Number (NHRN) NHRN
+        "713"  to "n3+x..20", // National Healthcare Reimbursement Number (NHRN) NHRN
+        "714"  to "n3+x..20", // National Healthcare Reimbursement Number (NHRN) NHRN
         "8001" to "n4+n14", // Rulleprodukter Dimensions
         "8002" to "n4+x..20", // Elektronisk serienummer for CMTI CMT No.
         "8003" to "n4+n14+x..16", // EAN nummer og serienummer for returenheder GRAI
