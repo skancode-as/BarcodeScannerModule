@@ -7,7 +7,7 @@ internal interface Gs1Parser {
     fun parse(barcode: String): Pair<Gs1Object, Boolean>
 }
 
-internal class Gs1ParserImpl: Gs1Parser {
+internal class Gs1ParserImpl(val logger: Logger = Logger("Gs1ParserImpl")): Gs1Parser {
     override fun parse(barcode: String): Pair<Gs1Object, Boolean> {
         val b = if (!barcode.startsWith("(")) {
             val newBarcode = prettifyGs1(barcode)
@@ -49,13 +49,19 @@ internal class Gs1ParserImpl: Gs1Parser {
 
                 currentAI += char
                 val node = gs1PrefixTree.find(currentAI)
-                if (node == null) return null
+                if (node == null) {
+                    logger.debug("No GS1 ai matched '$currentAI'")
+                    return null
+                }
 
                 currentPattern = node.value
             } while (currentPattern == null)
 
             val pattern = Gs1PatternParser(currentPattern).parse()
-            if (pattern == null) return null
+            if (pattern == null) {
+                logger.debug("Failed parsing pattern '$currentPattern' for ai '$currentAI'")
+                return null
+            }
 
             var currentValue = ""
             for (part in pattern.parts) {
@@ -75,7 +81,10 @@ internal class Gs1ParserImpl: Gs1Parser {
                     }
                     false -> {
                         val end = idx+part.maxLength
-                        if (end > barcode.length) return null
+                        if (end > barcode.length) {
+                            logger.debug("Not enough remaining characters for ai '$currentAI' with pattern '$currentPattern'")
+                            return null
+                        }
                         currentValue += barcode.substring(idx, end)
                         idx += part.maxLength
                     }
