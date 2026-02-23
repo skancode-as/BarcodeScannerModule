@@ -4,39 +4,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import dk.skancode.barcodescannermodule.Enabler
-import dk.skancode.barcodescannermodule.event.IEventHandler
 import dk.skancode.barcodescannermodule.IScannerModule
-import dk.skancode.barcodescannermodule.ScanMode
+import dk.skancode.barcodescannermodule.event.TypedEventHandler
 import kotlinx.coroutines.delay
-
-internal fun IScannerModule.defaultBarcodeConfig() {
-    this.setScannerState(Enabler.ON)
-    this.setScanMode(ScanMode.API)
-    this.setNotificationSound(Enabler.ON)
-    this.setNotificationVibration(Enabler.ON)
-    this.setAutoEnter(Enabler.OFF)
-    /*
-        if (this.canSetSymbology()) {
-            this.setSymbology(
-                SupportedNewlandSymbologies.TransmitCheckChar(
-                    codeID = "EAN13",
-                    value = Enabler.ON
-                )
-            )
-            this.setSymbology(
-                SupportedNewlandSymbologies.TransmitCheckChar(
-                    codeID = "EAN8",
-                    value = Enabler.ON
-                )
-            )
-        }
-    */
-}
+import kotlinx.coroutines.isActive
 
 @Composable
-@Deprecated("Use TypedScanEventHandler instead for type safety")
-fun ScanEventHandler(
-    eventHandler: IEventHandler,
+fun TypedScanEventHandler(
+    eventHandler: TypedEventHandler,
     registerBarcode: Boolean = true,
     registerNFC: Boolean = false,
     onNfcNotEnabled: () -> Unit = {},
@@ -44,7 +19,7 @@ fun ScanEventHandler(
     barcodeConfig: IScannerModule.() -> Unit = { defaultBarcodeConfig() },
 ) {
     LaunchedEffect(module) {
-        while (true) {
+        while (this.isActive) {
             if (registerNFC && module.nfcAvailable() && module.getNfcStatus() == Enabler.OFF && !module.canSetNfcStatus()) {
                 onNfcNotEnabled()
             }
@@ -55,20 +30,20 @@ fun ScanEventHandler(
     DisposableEffect(module) {
         if (registerBarcode && module.scannerAvailable()) {
             module.barcodeConfig()
-            module.registerBarcodeReceiver(eventHandler)
         }
-
         if (registerNFC && module.nfcAvailable()) {
             if (module.getNfcStatus() == Enabler.OFF && module.canSetNfcStatus()) {
                 module.setNfcStatus(Enabler.ON)
             }
+        }
 
-            module.registerNFCReceiver(eventHandler)
+        if (registerBarcode || registerNFC) {
+            module.registerTypedEventHandler(eventHandler)
         }
 
         onDispose {
             if (registerBarcode && module.scannerAvailable() || registerNFC && module.nfcAvailable()) {
-                module.unregisterBarcodeReceiver(eventHandler)
+                module.unregisterTypedEventHandler(eventHandler)
             }
         }
     }
